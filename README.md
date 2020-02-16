@@ -202,9 +202,8 @@ prefer MSVC over GNU, but you'll need to have the [Microsoft VC++ 2015
 redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=48145)
 installed.
 
-If you're a **macOS Homebrew** or a **Linuxbrew** user,
-then you can install ripgrep either
-from homebrew-core, (compiled with rust stable, no SIMD):
+If you're a **macOS Homebrew** or a **Linuxbrew** user, then you can install
+ripgrep from homebrew-core:
 
 ```
 $ brew install ripgrep
@@ -267,7 +266,7 @@ If you're an **openSUSE Tumbleweed** user, you can install ripgrep from the
 $ sudo zypper install ripgrep
 ```
 
-If you're a **RHEL/CentOS 7** user, you can install ripgrep from
+If you're a **RHEL/CentOS 7/8** user, you can install ripgrep from
 [copr](https://copr.fedorainfracloud.org/coprs/carlwgeorge/ripgrep/):
 
 ```
