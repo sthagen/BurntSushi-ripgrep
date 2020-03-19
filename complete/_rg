@@ -3,7 +3,7 @@
 ##
 # zsh completion function for ripgrep
 #
-# Run ci/test_complete.sh after building to ensure that the options supported by
+# Run ci/test-complete after building to ensure that the options supported by
 # this function stay in synch with the `rg` binary.
 #
 # For convenience, a completion reference guide is included at the bottom of
@@ -78,6 +78,13 @@ _rg() {
     {-E+,--encoding=}'[specify text encoding of files to search]: :_rg_encodings'
     $no'--no-encoding[use default text encoding]'
 
+    + '(engine)' # Engine choice options
+    '--engine=[select which regex engine to use]:when:((
+      default\:"use default engine"
+      pcre2\:"identical to --pcre2"
+      auto\:"identical to --auto-hybrid-regex"
+    ))'
+
     + file # File-input options
     '(1)*'{-f+,--file=}'[specify file containing patterns to search for]: :_files'
 
@@ -149,9 +156,13 @@ _rg() {
     "--no-require-git[don't require git repository to respect gitignore rules]"
     $no'--require-git[require git repository to respect gitignore rules]'
 
-    + '(ignore-dot)' # .ignore-file options
+    + '(ignore-dot)' # .ignore options
     "--no-ignore-dot[don't respect .ignore files]"
     $no'--ignore-dot[respect .ignore files]'
+
+    + '(ignore-files)' # custom global ignore file options
+    "--no-ignore-files[don't respect --ignore-file flags]"
+    $no'--ignore-files[respect --ignore-file files]'
 
     + '(json)' # JSON options
     '--json[output results in JSON Lines format]'
@@ -312,7 +323,7 @@ _rg() {
     '(--type-list)*: :_files'
   )
 
-  # This is used with test_complete.sh to verify that there are no options
+  # This is used with test-complete to verify that there are no options
   # listed in the help output that aren't also defined here
   [[ $_RG_COMPLETE_LIST_ARGS == (1|t*|y*) ]] && {
     print -rl - $args

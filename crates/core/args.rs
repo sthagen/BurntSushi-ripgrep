@@ -394,11 +394,11 @@ enum SortByKind {
 
 impl SortBy {
     fn asc(kind: SortByKind) -> SortBy {
-        SortBy { reverse: false, kind: kind }
+        SortBy { reverse: false, kind }
     }
 
     fn desc(kind: SortByKind) -> SortBy {
-        SortBy { reverse: true, kind: kind }
+        SortBy { reverse: true, kind }
     }
 
     fn none() -> SortBy {
@@ -559,10 +559,10 @@ impl ArgMatches {
         };
         Ok(Args(Arc::new(ArgsImp {
             matches: self,
-            patterns: patterns,
-            matcher: matcher,
-            paths: paths,
-            using_default_path: using_default_path,
+            patterns,
+            matcher,
+            paths,
+            using_default_path,
         })))
     }
 }
@@ -576,58 +576,78 @@ impl ArgMatches {
     ///
     /// If there was a problem building the matcher (e.g., a syntax error),
     /// then this returns an error.
-    #[cfg(feature = "pcre2")]
     fn matcher(&self, patterns: &[String]) -> Result<PatternMatcher> {
         if self.is_present("pcre2") {
-            let matcher = self.matcher_pcre2(patterns)?;
-            Ok(PatternMatcher::PCRE2(matcher))
+            self.matcher_engine("pcre2", patterns)
         } else if self.is_present("auto-hybrid-regex") {
-            let rust_err = match self.matcher_rust(patterns) {
-                Ok(matcher) => return Ok(PatternMatcher::RustRegex(matcher)),
-                Err(err) => err,
-            };
-            log::debug!(
-                "error building Rust regex in hybrid mode:\n{}",
-                rust_err,
-            );
-            let pcre_err = match self.matcher_pcre2(patterns) {
-                Ok(matcher) => return Ok(PatternMatcher::PCRE2(matcher)),
-                Err(err) => err,
-            };
-            Err(From::from(format!(
-                "regex could not be compiled with either the default regex \
-                 engine or with PCRE2.\n\n\
-                 default regex engine error:\n{}\n{}\n{}\n\n\
-                 PCRE2 regex engine error:\n{}",
-                "~".repeat(79),
-                rust_err,
-                "~".repeat(79),
-                pcre_err,
-            )))
+            self.matcher_engine("auto", patterns)
         } else {
-            let matcher = match self.matcher_rust(patterns) {
-                Ok(matcher) => matcher,
-                Err(err) => {
-                    return Err(From::from(suggest_pcre2(err.to_string())));
-                }
-            };
-            Ok(PatternMatcher::RustRegex(matcher))
+            let engine = self.value_of_lossy("engine").unwrap();
+            self.matcher_engine(&engine, patterns)
         }
     }
 
-    /// Return the matcher that should be used for searching.
+    /// Return the matcher that should be used for searching using engine
+    /// as the engine for the patterns.
     ///
     /// If there was a problem building the matcher (e.g., a syntax error),
     /// then this returns an error.
-    #[cfg(not(feature = "pcre2"))]
-    fn matcher(&self, patterns: &[String]) -> Result<PatternMatcher> {
-        if self.is_present("pcre2") {
-            return Err(From::from(
+    fn matcher_engine(
+        &self,
+        engine: &str,
+        patterns: &[String],
+    ) -> Result<PatternMatcher> {
+        match engine {
+            "default" => {
+                let matcher = match self.matcher_rust(patterns) {
+                    Ok(matcher) => matcher,
+                    Err(err) => {
+                        return Err(From::from(suggest(err.to_string())));
+                    }
+                };
+                Ok(PatternMatcher::RustRegex(matcher))
+            }
+            #[cfg(feature = "pcre2")]
+            "pcre2" => {
+                let matcher = self.matcher_pcre2(patterns)?;
+                Ok(PatternMatcher::PCRE2(matcher))
+            }
+            #[cfg(not(feature = "pcre2"))]
+            "pcre2" => Err(From::from(
                 "PCRE2 is not available in this build of ripgrep",
-            ));
+            )),
+            "auto" => {
+                let rust_err = match self.matcher_rust(patterns) {
+                    Ok(matcher) => {
+                        return Ok(PatternMatcher::RustRegex(matcher));
+                    }
+                    Err(err) => err,
+                };
+                log::debug!(
+                    "error building Rust regex in hybrid mode:\n{}",
+                    rust_err,
+                );
+
+                let pcre_err = match self.matcher_engine("pcre2", patterns) {
+                    Ok(matcher) => return Ok(matcher),
+                    Err(err) => err,
+                };
+                Err(From::from(format!(
+                    "regex could not be compiled with either the default \
+                     regex engine or with PCRE2.\n\n\
+                     default regex engine error:\n{}\n{}\n{}\n\n\
+                     PCRE2 regex engine error:\n{}",
+                    "~".repeat(79),
+                    rust_err,
+                    "~".repeat(79),
+                    pcre_err,
+                )))
+            }
+            _ => Err(From::from(format!(
+                "unrecognized regex engine '{}'",
+                engine
+            ))),
         }
-        let matcher = self.matcher_rust(patterns)?;
-        Ok(PatternMatcher::RustRegex(matcher))
     }
 
     /// Build a matcher using Rust's regex engine.
@@ -842,9 +862,11 @@ impl ArgMatches {
         for path in &paths[1..] {
             builder.add(path);
         }
-        for path in self.ignore_paths() {
-            if let Some(err) = builder.add_ignore(path) {
-                ignore_message!("{}", err);
+        if !self.no_ignore_files() {
+            for path in self.ignore_paths() {
+                if let Some(err) = builder.add_ignore(path) {
+                    ignore_message!("{}", err);
+                }
             }
         }
         builder
@@ -1206,6 +1228,14 @@ impl ArgMatches {
     /// Returns true if local exclude (ignore) files should be ignored.
     fn no_ignore_exclude(&self) -> bool {
         self.is_present("no-ignore-exclude") || self.no_ignore()
+    }
+
+    /// Returns true if explicitly given ignore files should be ignored.
+    fn no_ignore_files(&self) -> bool {
+        // We don't look at no-ignore here because --no-ignore is explicitly
+        // documented to not override --ignore-file. We could change this, but
+        // it would be a fairly severe breaking change.
+        self.is_present("no-ignore-files")
     }
 
     /// Returns true if global ignore files should be ignored.
@@ -1677,21 +1707,40 @@ impl ArgMatches {
 }
 
 /// Inspect an error resulting from building a Rust regex matcher, and if it's
+/// believed to correspond to a syntax error that another engine could handle,
+/// then add a message to suggest the use of the engine flag.
+fn suggest(msg: String) -> String {
+    if let Some(pcre_msg) = suggest_pcre2(&msg) {
+        return pcre_msg;
+    }
+    msg
+}
+
+/// Inspect an error resulting from building a Rust regex matcher, and if it's
 /// believed to correspond to a syntax error that PCRE2 could handle, then
 /// add a message to suggest the use of -P/--pcre2.
-#[cfg(feature = "pcre2")]
-fn suggest_pcre2(msg: String) -> String {
-    if !msg.contains("backreferences") && !msg.contains("look-around") {
-        msg
-    } else {
-        format!(
-            "{}
+fn suggest_pcre2(msg: &str) -> Option<String> {
+    #[cfg(feature = "pcre2")]
+    fn suggest(msg: &str) -> Option<String> {
+        if !msg.contains("backreferences") && !msg.contains("look-around") {
+            None
+        } else {
+            Some(format!(
+                "{}
 
 Consider enabling PCRE2 with the --pcre2 flag, which can handle backreferences
 and look-around.",
-            msg
-        )
+                msg
+            ))
+        }
     }
+
+    #[cfg(not(feature = "pcre2"))]
+    fn suggest(_: &str) -> Option<String> {
+        None
+    }
+
+    suggest(msg)
 }
 
 fn suggest_multiline(msg: String) -> String {

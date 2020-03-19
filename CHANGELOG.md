@@ -1,6 +1,26 @@
-TBD
-===
-TODO
+12.0.1 (TBD)
+============
+ripgrep 12.0.1 is a small patch release that includes a couple minor bug fixes.
+These bug fixes address regressions introduced in the 12.0.0 release.
+
+Bug fixes:
+
+* [BUG #1520](https://github.com/BurntSushi/ripgrep/issues/1520):
+  Don't emit spurious error messages in git repositories with submodules.
+
+
+12.0.0 (2020-03-15)
+===================
+ripgrep 12 is a new major version release of ripgrep that contains many bug
+fixes, several important performance improvements and a few minor new features.
+
+In a near future release, I am hoping to add an
+[indexing feature](https://github.com/BurntSushi/ripgrep/issues/1497)
+to ripgrep, which will dramatically speed up searching by building an index.
+Feedback would very much be appreciated, especially on the user experience
+which will be difficult to get right.
+
+This release has no known breaking changes.
 
 Deprecations:
 
@@ -9,9 +29,13 @@ Deprecations:
   `--no-pcre2-unicode` and `--pcre2-unicode` are aliases to `--no-unicode`
   and `--unicode`, respectively. The `--[no-]pcre2-unicode` flags may be
   removed in a future release.
+* The `--auto-hybrid-regex` flag is deprecated. Instead, use the new `--engine`
+  flag with the `auto` value.
 
 Performance improvements:
 
+* [PERF #1087](https://github.com/BurntSushi/ripgrep/pull/1087):
+  ripgrep is smarter when detected literals are whitespace.
 * [PERF #1381](https://github.com/BurntSushi/ripgrep/pull/1381):
   Directory traversal is sped up with speculative ignore-file existence checks.
 * [PERF cd8ec38a](https://github.com/BurntSushi/ripgrep/commit/cd8ec38a):
@@ -35,6 +59,10 @@ Feature enhancements:
   Add `--no-require-git` flag to allow ripgrep to respect gitignores anywhere.
 * [FEATURE #1420](https://github.com/BurntSushi/ripgrep/pull/1420):
   Add `--no-ignore-exclude` to disregard rules in `.git/info/exclude` files.
+* [FEATURE #1466](https://github.com/BurntSushi/ripgrep/pull/1466):
+  Add `--no-ignore-files` flag to disable all `--ignore-file` flags.
+* [FEATURE #1488](https://github.com/BurntSushi/ripgrep/pull/1488):
+  Add '--engine' flag for easier switching between regex engines.
 * [FEATURE 75cbe88f](https://github.com/BurntSushi/ripgrep/commit/75cbe88f):
   Add `--no-unicode` flag. This works on all supported regex engines.
 
@@ -51,6 +79,13 @@ Bug fixes:
   Document usage of `--type all`.
 * [BUG #1389](https://github.com/BurntSushi/ripgrep/issues/1389):
   Fixes a bug where ripgrep would panic when searching a symlinked directory.
+* [BUG #1439](https://github.com/BurntSushi/ripgrep/issues/1439):
+  Improve documentation for ripgrep's automatic stdin detection.
+* [BUG #1441](https://github.com/BurntSushi/ripgrep/issues/1441):
+  Remove CPU features from man page.
+* [BUG #1442](https://github.com/BurntSushi/ripgrep/issues/1442),
+  [BUG #1478](https://github.com/BurntSushi/ripgrep/issues/1478):
+  Improve documentation of the `-g/--glob` flag.
 * [BUG #1445](https://github.com/BurntSushi/ripgrep/issues/1445):
   ripgrep now respects ignore rules from .git/info/exclude in worktrees.
 * [BUG #1485](https://github.com/BurntSushi/ripgrep/issues/1485):
