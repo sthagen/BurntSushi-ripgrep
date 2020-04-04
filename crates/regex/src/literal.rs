@@ -141,6 +141,9 @@ impl LiteralSets {
             // (Not in theory---it could be better. But the current
             // implementation isn't good enough.) ... So we make up for it
             // here.
+            if !word {
+                return None;
+            }
             let p_min_len = self.prefixes.min_len();
             let s_min_len = self.suffixes.min_len();
             let lits = match (p_min_len, s_min_len) {
@@ -323,12 +326,12 @@ fn is_simple(expr: &Hir) -> bool {
         HirKind::Empty
         | HirKind::Literal(_)
         | HirKind::Class(_)
-        | HirKind::Repetition(_)
         | HirKind::Concat(_)
         | HirKind::Alternation(_) => true,
-        HirKind::Anchor(_) | HirKind::WordBoundary(_) | HirKind::Group(_) => {
-            false
-        }
+        HirKind::Anchor(_)
+        | HirKind::WordBoundary(_)
+        | HirKind::Group(_)
+        | HirKind::Repetition(_) => false,
     }
 }
 
@@ -409,8 +412,17 @@ mod tests {
         // https://github.com/BurntSushi/ripgrep/issues/1319
         assert_eq!(
             one_regex(r"TTGAGTCCAGGAG[ATCG]{2}C"),
-            pat("TTGAGTCCAGGAGA|TTGAGTCCAGGAGC|\
-                 TTGAGTCCAGGAGG|TTGAGTCCAGGAGT")
+            pat("TTGAGTCCAGGAG"),
         );
+    }
+
+    #[test]
+    fn regression_1537() {
+        // Regression from:
+        // https://github.com/BurntSushi/ripgrep/issues/1537
+        assert_eq!(one_regex(r";(.*,)"), pat(";"));
+        assert_eq!(one_regex(r";((.*,))"), pat(";"));
+        assert_eq!(one_regex(r";(.*,)+"), pat(";"),);
+        assert_eq!(one_regex(r";(.*,){1}"), pat(";"),);
     }
 }
