@@ -17,27 +17,10 @@ ripgrep (rg) recursively searches your current directory for a regex pattern.
 By default, ripgrep will respect your .gitignore and automatically skip hidden
 files/directories and binary files.
 
-ripgrep's default regex engine uses finite automata and guarantees linear
-time searching. Because of this, features like backreferences and arbitrary
-look-around are not supported. However, if ripgrep is built with PCRE2, then
-the --pcre2 flag can be used to enable backreferences and look-around.
-
-ripgrep supports configuration files. Set RIPGREP_CONFIG_PATH to a
-configuration file. The file can specify one shell argument per line. Lines
-starting with '#' are ignored. For more details, see the man page or the
-README.
-
-ripgrep will automatically detect if stdin exists and search stdin for a regex
-pattern, e.g. 'ls | rg foo'. In some environments, stdin may exist when it
-shouldn't. To turn off stdin detection explicitly specify the directory to
-search, e.g. 'rg foo ./'.
-
-Tip: to disable all smart filtering and make ripgrep behave a bit more like
-classical grep, use 'rg -uuu'.
+Use -h for short descriptions and --help for more details.
 
 Project home page: https://github.com/BurntSushi/ripgrep
-
-Use -h for short descriptions and --help for more details.";
+";
 
 const USAGE: &str = "
     rg [OPTIONS] PATTERN [PATH ...]
@@ -478,7 +461,7 @@ impl RGArg {
         self
     }
 
-    /// Permit this flag to have values that begin with a hypen.
+    /// Permit this flag to have values that begin with a hyphen.
     ///
     /// This panics if this arg is not a flag.
     fn allow_leading_hyphen(mut self) -> RGArg {
@@ -693,8 +676,8 @@ fn arg_path(args: &mut Vec<RGArg>) {
     const SHORT: &str = "A file or directory to search.";
     const LONG: &str = long!(
         "\
-A file or directory to search. Directories are searched recursively. Paths \
-specified on the command line override glob and ignore rules. \
+A file or directory to search. Directories are searched recursively. File \
+paths specified on the command line override glob and ignore rules. \
 "
     );
     let arg = RGArg::positional("path", "PATH")
@@ -1371,7 +1354,7 @@ command line takes precedence.
 When this flag is set, every file and directory is applied to it to test for
 a match. So for example, if you only want to search in a particular directory
 'foo', then *-g foo* is incorrect because 'foo/bar' does not match the glob
-'foo'. Instead, you should use *-g +++'foo/**'+++*.
+'foo'. Instead, you should use *-g 'foo/**'*.
 "
     );
     let arg = RGArg::flag("glob", "GLOB")
@@ -1961,6 +1944,10 @@ Don't respect ignore files (.gitignore, .ignore, etc.). This implies
 
 This does *not* imply --no-ignore-files, since --ignore-file is specified
 explicitly as a command line argument.
+
+When given only once, the -u flag is identical in behavior to --no-ignore and
+can be considered an alias. However, subsequent -u flags have additional
+effects; see --unrestricted.
 
 This flag can be disabled with the --ignore flag.
 "
@@ -2593,10 +2580,15 @@ Replace every match with the text given when printing results. Neither this
 flag nor any other ripgrep flag will modify your files.
 
 Capture group indices (e.g., $5) and names (e.g., $foo) are supported in the
-replacement string. In shells such as Bash and zsh, you should wrap the
-pattern in single quotes instead of double quotes. Otherwise, capture group
-indices will be replaced by expanded shell variables which will most likely
-be empty.
+replacement string. Capture group indices are numbered based on the position of
+the opening parenthesis of the group, where the leftmost such group is $1. The
+special $0 group corresponds to the entire match.
+
+In shells such as Bash and zsh, you should wrap the pattern in single quotes
+instead of double quotes. Otherwise, capture group indices will be replaced by
+expanded shell variables which will most likely be empty.
+
+To write a literal '$', use '$$'.
 
 Note that the replacement by default replaces each match, and NOT the entire
 line. To replace the entire line, you should match the entire line.
@@ -2641,6 +2633,15 @@ fn flag_smart_case(args: &mut Vec<RGArg>) {
         "\
 Searches case insensitively if the pattern is all lowercase. Search case
 sensitively otherwise.
+
+A pattern is considered all lowercase if both of the following rules hold:
+
+First, the pattern contains at least one literal character. For example, 'a\\w'
+contains a literal ('a') but just '\\w' does not.
+
+Second, of the literals in the pattern, none of them are considered to be
+uppercase according to Unicode. For example, 'foo\\pL' has no uppercase
+literals but 'Foo\\pL' does.
 
 This overrides the -s/--case-sensitive and -i/--ignore-case flags.
 "
@@ -2877,7 +2878,7 @@ time. Multiple --type-add flags can be provided. Unless --type-clear is used,
 globs are added to any existing globs defined inside of ripgrep.
 
 Note that this MUST be passed to every invocation of ripgrep. Type settings are
-NOT persisted.
+NOT persisted. See CONFIGURATION FILES for a workaround.
 
 Example:
 
@@ -2915,7 +2916,7 @@ Clear the file type globs previously defined for TYPE. This only clears the
 default type definitions that are found inside of ripgrep.
 
 Note that this MUST be passed to every invocation of ripgrep. Type settings are
-NOT persisted.
+NOT persisted. See CONFIGURATION FILES for a workaround.
 "
     );
     let arg = RGArg::flag("type-clear", "TYPE")
@@ -2962,8 +2963,9 @@ fn flag_unrestricted(args: &mut Vec<RGArg>) {
     const LONG: &str = long!(
         "\
 Reduce the level of \"smart\" searching. A single -u won't respect .gitignore
-(etc.) files. Two -u flags will additionally search hidden files and
-directories. Three -u flags will additionally search binary files.
+(etc.) files (--no-ignore). Two -u flags will additionally search hidden files
+and directories (--hidden). Three -u flags will additionally search binary files
+(--binary).
 
 'rg -uuu' is roughly equivalent to 'grep -r'.
 "

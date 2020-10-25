@@ -97,7 +97,7 @@ times are unaffected by the presence or absence of `-n`.
   whereas there are many bugs related to that functionality in other code
   search tools claiming to provide the same functionality.
 * ripgrep can search specific types of files. For example, `rg -tpy foo`
-  limits your search to Python files and `rg -Tjs foo` excludes Javascript
+  limits your search to Python files and `rg -Tjs foo` excludes JavaScript
   files from your search. ripgrep can be taught about new file types with
   custom matching rules.
 * ripgrep supports many features found in `grep`, such as showing the context
@@ -116,9 +116,10 @@ times are unaffected by the presence or absence of `-n`.
   specifically specified with the `-E/--encoding` flag.)
 * ripgrep supports searching files compressed in a common format (brotli,
   bzip2, gzip, lz4, lzma, xz, or zstandard) with the `-z/--search-zip` flag.
-* ripgrep supports arbitrary input preprocessing filters which could be PDF
-  text extraction, less supported decompression, decrypting, automatic encoding
-  detection and so on.
+* ripgrep supports
+  [arbitrary input preprocessing filters](GUIDE.md#preprocessor)
+  which could be PDF text extraction, less supported decompression, decrypting,
+  automatic encoding detection and so on.
 
 In other words, use ripgrep if you like speed, filtering by default, fewer
 bugs and Unicode support.

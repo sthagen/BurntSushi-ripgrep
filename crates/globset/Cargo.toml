@@ -1,6 +1,6 @@
 [package]
 name = "globset"
-version = "0.4.5"  #:version
+version = "0.4.6"  #:version
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = """
 Cross platform single glob and glob set matching. Glob set matching is the
@@ -23,7 +23,7 @@ aho-corasick = "0.7.3"
 bstr = { version = "0.2.0", default-features = false, features = ["std"] }
 fnv = "1.0.6"
 log = "0.4.5"
-regex = "1.1.5"
+regex = { version = "1.1.5", default-features = false, features = ["perf", "std"] }
 serde = { version = "1.0.104", optional = true }
 
 [dev-dependencies]

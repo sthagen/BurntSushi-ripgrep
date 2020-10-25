@@ -5,14 +5,15 @@
 * [When is the next release?](#release)
 * [Does ripgrep have a man page?](#manpage)
 * [Does ripgrep have support for shell auto-completion?](#complete)
-* [How do I use lookaround and/or backreferences?](#fancy)
-* [How do I configure ripgrep's colors?](#colors)
-* [How do I enable true colors on Windows?](#truecolors-windows)
-* [How do I stop ripgrep from messing up colors when I kill it?](#stop-ripgrep)
 * [How can I get results in a consistent order?](#order)
 * [How do I search files that aren't UTF-8?](#encoding)
 * [How do I search compressed files?](#compressed)
 * [How do I search over multiple lines?](#multiline)
+* [How do I use lookaround and/or backreferences?](#fancy)
+* [How do I configure ripgrep's colors?](#colors)
+* [How do I enable true colors on Windows?](#truecolors-windows)
+* [How do I stop ripgrep from messing up colors when I kill it?](#stop-ripgrep)
+* [Why does using a leading `/` on Windows fail?](#because-cygwin)
 * [How do I get around the regex size limit?](#size-limit)
 * [How do I make the `-f/--file` flag faster?](#dfa-size)
 * [How do I make the output look like The Silver Searcher's output?](#silver-searcher-output)
@@ -60,9 +61,10 @@ patch release out with a fix. However, no promises are made.
 Does ripgrep have a man page?
 </h3>
 
-Yes! Whenever ripgrep is compiled on a system with `asciidoc` present, then a
-man page is generated from ripgrep's argv parser. After compiling ripgrep, you
-can find the man page like so from the root of the repository:
+Yes! Whenever ripgrep is compiled on a system with `asciidoctor` or `asciidoc`
+present, then a man page is generated from ripgrep's argv parser. After
+compiling ripgrep, you can find the man page like so from the root of the
+repository:
 
 ```
 $ find ./target -name rg.1 -print0 | xargs -0 ls -t | head -n1
@@ -138,7 +140,7 @@ How do I search compressed files?
 
 ripgrep's `-z/--search-zip` flag will cause it to search compressed files
 automatically. Currently, this supports gzip, bzip2, xz, lzma, lz4, Brotli and
-Zstd. Each of these requires requires the corresponding `gzip`, `bzip2`, `xz`,
+Zstd. Each of these requires the corresponding `gzip`, `bzip2`, `xz`,
 `lz4`, `brotli` and `zstd` binaries to be installed on your system. (That is,
 ripgrep does decompression by shelling out to another process.)
 
@@ -312,6 +314,26 @@ was later deprecated in
 [#281](https://github.com/BurntSushi/ripgrep/issues/281). A full explanation is
 available
 [here](https://github.com/BurntSushi/ripgrep/issues/281#issuecomment-269093893).
+
+
+<h3 name="because-cygwin">
+Why does using a leading `/` on Windows fail?
+</h3>
+
+If you're using cygwin on Windows and try to search for a pattern beginning
+with a `/`, then it's possible that cygwin is mangling that pattern without
+your knowledge. For example, if you tried running `rg /foo` in a cygwin shell
+on Windows, then cygwin might mistakenly perform path translation on `/foo`,
+which would result in `rg C:/msys64/foo` being searched instead.
+
+You can fix this in one of three ways:
+
+1. Stop using cygwin.
+2. Escape the leading slash with an additional slash. e.g., `rg //foo`.
+3. Temporarily disable path translation by setting `MSYS_NO_PATHCONV=1`. e.g.,
+   `MSYS_NO_PATHCONV=1 rg /foo`.
+
+For more details, see https://github.com/BurntSushi/ripgrep/issues/1277
 
 
 <h3 name="size-limit">
@@ -823,7 +845,7 @@ rg foo --files-with-matches | xargs sed -i 's/foo/bar/g'
 will replace all instances of 'foo' with 'bar' in the files in which
 ripgrep finds the foo pattern. The `-i` flag to sed indicates that you are
 editing files in place, and `s/foo/bar/g` says that you are performing a
-**s**ubstitution of the pattren `foo` for `bar`, and that you are doing this
+**s**ubstitution of the pattern `foo` for `bar`, and that you are doing this
 substitution **g**lobally (all occurrences of the pattern in each file).
 
 Note: the above command assumes that you are using GNU sed. If you are using
@@ -870,7 +892,7 @@ The reason why ripgrep is dual licensed this way is two-fold:
 1. I, as ripgrep's author, would like to participate in a small bit of
    ideological activism by promoting the Unlicense's goal: to disclaim
    copyright monopoly interest.
-2. I, as ripgrep's author, would like as many people to use rigprep as
+2. I, as ripgrep's author, would like as many people to use ripgrep as
    possible. Since the Unlicense is not a proven or well known license, ripgrep
    is also offered under the MIT license, which is ubiquitous and accepted by
    almost everyone.

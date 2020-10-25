@@ -1,9 +1,71 @@
 TBD
 ===
+Unreleased changes. Release notes have not yet been written.
+
 Bug fixes:
 
+* [BUG #1277](https://github.com/BurntSushi/ripgrep/issues/1277):
+  Document cygwin path translation behavior in the FAQ.
+
+
+12.1.1 (2020-05-29)
+===================
+ripgrep 12.1.1 is a patch release that fixes a couple small bugs. In
+particular, the ripgrep 12.1.0 release did not tag new releases for all of its
+in-tree dependencies. As a result, ripgrep built dependencies from crates.io
+would produce a different build than compiling ripgrep from source on the
+`12.1.0` tag. Namely, some crates like `grep-cli` had unreleased changes.
+
+Bug fixes:
+
+* [BUG #1581](https://github.com/BurntSushi/ripgrep/issues/1581):
+  Corrects some egregious markup output in `--help`.
+* [BUG #1591](https://github.com/BurntSushi/ripgrep/issues/1591):
+  Mention the special `$0` capture group in docs for the `-r/--replace` flag.
+* [BUG #1602](https://github.com/BurntSushi/ripgrep/issues/1602):
+  Fix failing test resulting from out-of-sync dependencies.
+
+
+12.1.0 (2020-05-09)
+===================
+ripgrep 12.1.0 is a small minor version release that mostly includes bug fixes
+and documentation improvements. This release also contains some important
+notices for downstream packagers.
+
+**Notices for downstream ripgrep package maintainers:**
+
+* Fish shell completions will be removed in the ripgrep 13 release.
+  See [#1577](https://github.com/BurntSushi/ripgrep/issues/1577)
+  for more details.
+* ripgrep has switched from `a2x` to `asciidoctor` to generate the man page.
+  If `asciidoctor` is not present, then ripgrep will currently fall back to
+  `a2x`. Support for `a2x` will be dropped in the ripgrep 13 release.
+  See [#1544](https://github.com/BurntSushi/ripgrep/issues/1544)
+  for more details.
+
+Feature enhancements:
+
+* [FEATURE #1547](https://github.com/BurntSushi/ripgrep/pull/1547):
+  Support decompressing `.Z` files via `uncompress`.
+
+Bug fixes:
+
+* [BUG #1252](https://github.com/BurntSushi/ripgrep/issues/1252):
+  Add a section on the `--pre` flag to the GUIDE.
+* [BUG #1339](https://github.com/BurntSushi/ripgrep/issues/1339):
+  Improve error message when a pattern with invalid UTF-8 is provided.
+* [BUG #1524](https://github.com/BurntSushi/ripgrep/issues/1524):
+  Note how to escape a `$` when using `--replace`.
 * [BUG #1537](https://github.com/BurntSushi/ripgrep/issues/1537):
   Fix match bug caused by inner literal optimization.
+* [BUG #1544](https://github.com/BurntSushi/ripgrep/issues/1544):
+  ripgrep now uses `asciidoctor` instead of `a2x` to generate its man page.
+* [BUG #1550](https://github.com/BurntSushi/ripgrep/issues/1550):
+  Substantially reduce peak memory usage when searching wide directories.
+* [BUG #1571](https://github.com/BurntSushi/ripgrep/issues/1571):
+  Add note about configuration files in `--type-{add,clear}` docs.
+* [BUG #1573](https://github.com/BurntSushi/ripgrep/issues/1573):
+  Fix incorrect `--count-matches` output when using look-around.
 
 
 12.0.1 (2020-03-29)
@@ -515,7 +577,7 @@ Bug fixes:
 
 0.8.0 (2018-02-11)
 ==================
-This is a new minor version releae of ripgrep that satisfies several popular
+This is a new minor version release of ripgrep that satisfies several popular
 feature requests (config files, search compressed files, true colors), fixes
 many bugs and improves the quality of life for ripgrep maintainers. This
 release also includes greatly improved documentation in the form of a
@@ -1213,7 +1275,7 @@ Bug fixes:
 =====
 Feature enhancements:
 
-* Added or improved file type filtering for VB, R, F#, Swift, Nim, Javascript,
+* Added or improved file type filtering for VB, R, F#, Swift, Nim, JavaScript,
   TypeScript
 * [FEATURE #20](https://github.com/BurntSushi/ripgrep/issues/20):
   Adds a --no-filename flag.
