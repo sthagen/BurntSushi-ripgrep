@@ -278,8 +278,8 @@ then ripgrep can be installed using a binary `.deb` file provided in each
 [ripgrep release](https://github.com/BurntSushi/ripgrep/releases).
 
 ```
-$ curl -LO https://github.com/BurntSushi/ripgrep/releases/download/11.0.2/ripgrep_11.0.2_amd64.deb
-$ sudo dpkg -i ripgrep_11.0.2_amd64.deb
+$ curl -LO https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep_12.1.1_amd64.deb
+$ sudo dpkg -i ripgrep_12.1.1_amd64.deb
 ```
 
 If you run Debian Buster (currently Debian stable) or Debian sid, ripgrep is
@@ -309,14 +309,14 @@ If you're a **FreeBSD** user, then you can install ripgrep from the
 ```
 
 If you're an **OpenBSD** user, then you can install ripgrep from the
-[official ports](http://openports.se/textproc/ripgrep):
+[official ports](https://openports.se/textproc/ripgrep):
 
 ```
 $ doas pkg_add ripgrep
 ```
 
 If you're a **NetBSD** user, then you can install ripgrep from
-[pkgsrc](http://pkgsrc.se/textproc/ripgrep):
+[pkgsrc](https://pkgsrc.se/textproc/ripgrep):
 
 ```
 # pkgin install ripgrep
