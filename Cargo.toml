@@ -3,14 +3,13 @@ name = "ripgrep"
 version = "12.1.1"  #:version
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = """
-ripgrep is a line-oriented search tool that recursively searches your current
-directory for a regex pattern while respecting your gitignore rules. ripgrep
-has first class support on Windows, macOS and Linux.
+ripgrep is a line-oriented search tool that recursively searches the current
+directory for a regex pattern while respecting gitignore rules. ripgrep has
+first class support on Windows, macOS and Linux.
 """
 documentation = "https://github.com/BurntSushi/ripgrep"
 homepage = "https://github.com/BurntSushi/ripgrep"
 repository = "https://github.com/BurntSushi/ripgrep"
-readme = "README.md"
 keywords = ["regex", "grep", "egrep", "search", "pattern"]
 categories = ["command-line-utilities", "text-processing"]
 license = "Unlicense OR MIT"

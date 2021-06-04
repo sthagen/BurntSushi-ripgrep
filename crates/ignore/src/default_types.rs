@@ -4,7 +4,7 @@
 /// types to each invocation of ripgrep with the '--type-add' flag.
 ///
 /// If you would like to add or improve this list, please file a PR:
-/// https://github.com/BurntSushi/ripgrep
+/// <https://github.com/BurntSushi/ripgrep>.
 ///
 /// Please try to keep this list sorted lexicographically and wrapped to 79
 /// columns (inclusive).
@@ -16,7 +16,7 @@ pub const DEFAULT_TYPES: &[(&str, &[&str])] = &[
     ("asciidoc", &["*.adoc", "*.asc", "*.asciidoc"]),
     ("asm", &["*.asm", "*.s", "*.S"]),
     ("asp", &[
-        "*.aspx", "*.aspx.cs", "*.aspx.cs", "*.ascx", "*.ascx.cs", "*.ascx.vb",
+        "*.aspx", "*.aspx.cs", "*.aspx.vb", "*.ascx", "*.ascx.cs", "*.ascx.vb",
     ]),
     ("ats", &["*.ats", "*.dats", "*.sats", "*.hats"]),
     ("avro", &["*.avdl", "*.avpr", "*.avsc"]),
@@ -156,6 +156,7 @@ pub const DEFAULT_TYPES: &[(&str, &[&str])] = &[
     ("pdf", &["*.pdf"]),
     ("perl", &["*.perl", "*.pl", "*.PL", "*.plh", "*.plx", "*.pm", "*.t"]),
     ("php", &["*.php", "*.php3", "*.php4", "*.php5", "*.phtml"]),
+    ("po", &["*.po"]),
     ("pod", &["*.pod"]),
     ("postscript", &["*.eps", "*.ps"]),
     ("protobuf", &["*.proto"]),
@@ -169,9 +170,15 @@ pub const DEFAULT_TYPES: &[(&str, &[&str])] = &[
     ("racket", &["*.rkt"]),
     ("rdoc", &["*.rdoc"]),
     ("readme", &["README*", "*README"]),
+    ("red", &["*.r", "*.red", "*.reds"]),
     ("robot", &["*.robot"]),
     ("rst", &["*.rst"]),
-    ("ruby", &["Gemfile", "*.gemspec", ".irbrc", "Rakefile", "*.rb"]),
+    ("ruby", &[
+        // Idiomatic files
+        "config.ru", "Gemfile", ".irbrc", "Rakefile",
+        // Extensions
+        "*.gemspec", "*.rb", "*.rbw"
+    ]),
     ("rust", &["*.rs"]),
     ("sass", &["*.sass", "*.scss"]),
     ("scala", &["*.scala", "*.sbt"]),
