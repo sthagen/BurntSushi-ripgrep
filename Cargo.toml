@@ -1,6 +1,6 @@
 [package]
 name = "ripgrep"
-version = "12.1.1"  #:version
+version = "13.0.0"  #:version
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = """
 ripgrep is a line-oriented search tool that recursively searches the current
@@ -42,8 +42,8 @@ members = [
 
 [dependencies]
 bstr = "0.2.12"
-grep = { version = "0.2.7", path = "crates/grep" }
-ignore = { version = "0.4.16", path = "crates/ignore" }
+grep = { version = "0.2.8", path = "crates/grep" }
+ignore = { version = "0.4.18", path = "crates/ignore" }
 lazy_static = "1.1.0"
 log = "0.4.5"
 num_cpus = "1.8.0"

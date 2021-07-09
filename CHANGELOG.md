@@ -1,9 +1,23 @@
-TBD
-===
+13.0.1
+======
+Unreleased changes. Release notes have not yet been written.
+
+Bug fixes:
+
+* [BUG #1891](https://github.com/BurntSushi/ripgrep/issues/1891):
+  Fix bug when using `-w` with a regex that can match the empty string.
+* [BUG #1911](https://github.com/BurntSushi/ripgrep/issues/1911):
+  Disable mmap searching in all non-64-bit environments.
+
+
+13.0.0 (2021-06-12)
+===================
 ripgrep 13 is a new major version release of ripgrep that primarily contains
-bug fixes. There is also a fix for a security vulnerability on Windows
-([CVE-2021-3013](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-3013)),
-some performance improvements and some minor breaking changes.
+bug fixes, some performance improvements and a few minor breaking changes.
+There is also a fix for a security vulnerability on Windows
+([CVE-2021-3013](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-3013)).
+
+Some highlights:
 
 A new short flag, `-.`, has been added. It is an alias for the `--hidden` flag,
 which instructs ripgrep to search hidden files and directories.
