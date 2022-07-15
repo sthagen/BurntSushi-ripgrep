@@ -152,7 +152,7 @@ dependencies = [
 
 [[package]]
 name = "grep"
-version = "0.2.8"
+version = "0.2.10"
 dependencies = [
  "grep-cli",
  "grep-matcher",
@@ -211,7 +211,7 @@ dependencies = [
 
 [[package]]
 name = "grep-regex"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "grep-searcher"
-version = "0.1.8"
+version = "0.1.10"
 dependencies = [
  "bstr",
  "bytecount",
