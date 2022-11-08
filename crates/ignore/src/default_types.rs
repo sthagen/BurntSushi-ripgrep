@@ -33,6 +33,7 @@ pub const DEFAULT_TYPES: &[(&str, &[&str])] = &[
     ("c", &["*.[chH]", "*.[chH].in", "*.cats"]),
     ("cabal", &["*.cabal"]),
     ("candid", &["*.did"]),
+    ("carp", &["*.carp"]),
     ("cbor", &["*.cbor"]),
     ("ceylon", &["*.ceylon"]),
     ("clojure", &["*.clj", "*.cljc", "*.cljs", "*.cljx"]),
@@ -189,7 +190,9 @@ pub const DEFAULT_TYPES: &[(&str, &[&str])] = &[
     ("racket", &["*.rkt"]),
     ("rdoc", &["*.rdoc"]),
     ("readme", &["README*", "*README"]),
+    ("reasonml", &["*.re", "*.rei"]),
     ("red", &["*.r", "*.red", "*.reds"]),
+    ("rescript", &["*.res", "*.resi"]),
     ("robot", &["*.robot"]),
     ("rst", &["*.rst"]),
     ("ruby", &[
