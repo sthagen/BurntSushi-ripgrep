@@ -533,7 +533,7 @@ impl GitignoreBuilder {
 /// Return the file path of the current environment's global gitignore file.
 ///
 /// Note that the file path returned may not exist.
-fn gitconfig_excludes_path() -> Option<PathBuf> {
+pub fn gitconfig_excludes_path() -> Option<PathBuf> {
     // git supports $HOME/.gitconfig and $XDG_CONFIG_HOME/git/config. Notably,
     // both can be active at the same time, where $HOME/.gitconfig takes
     // precedent. So if $HOME/.gitconfig defines a `core.excludesFile`, then
@@ -596,8 +596,13 @@ fn parse_excludes_file(data: &[u8]) -> Option<PathBuf> {
     // probably works in more circumstances. I guess we would ideally have
     // a full INI parser. Yuck.
     lazy_static::lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?im)^\s*excludesfile\s*=\s*(.+)\s*$").unwrap();
+        static ref RE: Regex = Regex::new(
+            r"(?xim-u)
+            ^[[:space:]]*excludesfile[[:space:]]*
+            =
+            [[:space:]]*(.+)[[:space:]]*$
+            "
+        ).unwrap();
     };
     let caps = match RE.captures(data) {
         None => return None,

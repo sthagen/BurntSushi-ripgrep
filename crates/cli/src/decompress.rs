@@ -18,7 +18,7 @@ pub struct DecompressionMatcherBuilder {
 }
 
 /// A representation of a single command for decompressing data
-/// out-of-proccess.
+/// out-of-process.
 #[derive(Clone, Debug)]
 struct DecompressionCommand {
     /// The glob that matches this command.
@@ -132,7 +132,7 @@ impl DecompressionMatcherBuilder {
         A: AsRef<OsStr>,
     {
         let glob = glob.to_string();
-        let bin = resolve_binary(Path::new(program.as_ref()))?;
+        let bin = try_resolve_binary(Path::new(program.as_ref()))?;
         let args =
             args.into_iter().map(|a| a.as_ref().to_os_string()).collect();
         self.commands.push(DecompressionCommand { glob, bin, args });
@@ -422,6 +422,34 @@ impl io::Read for DecompressionReader {
 pub fn resolve_binary<P: AsRef<Path>>(
     prog: P,
 ) -> Result<PathBuf, CommandError> {
+    if !cfg!(windows) {
+        return Ok(prog.as_ref().to_path_buf());
+    }
+    try_resolve_binary(prog)
+}
+
+/// Resolves a path to a program to a path by searching for the program in
+/// `PATH`.
+///
+/// If the program could not be resolved, then an error is returned.
+///
+/// The purpose of doing this instead of passing the path to the program
+/// directly to Command::new is that Command::new will hand relative paths
+/// to CreateProcess on Windows, which will implicitly search the current
+/// working directory for the executable. This could be undesirable for
+/// security reasons. e.g., running ripgrep with the -z/--search-zip flag on an
+/// untrusted directory tree could result in arbitrary programs executing on
+/// Windows.
+///
+/// Note that this could still return a relative path if PATH contains a
+/// relative path. We permit this since it is assumed that the user has set
+/// this explicitly, and thus, desires this behavior.
+///
+/// If `check_exists` is false or the path is already an absolute path this
+/// will return immediately.
+fn try_resolve_binary<P: AsRef<Path>>(
+    prog: P,
+) -> Result<PathBuf, CommandError> {
     use std::env;
 
     fn is_exe(path: &Path) -> bool {
@@ -433,7 +461,7 @@ pub fn resolve_binary<P: AsRef<Path>>(
     }
 
     let prog = prog.as_ref();
-    if !cfg!(windows) || prog.is_absolute() {
+    if prog.is_absolute() {
         return Ok(prog.to_path_buf());
     }
     let syspaths = match env::var_os("PATH") {
@@ -455,9 +483,11 @@ pub fn resolve_binary<P: AsRef<Path>>(
             return Ok(abs_prog.to_path_buf());
         }
         if abs_prog.extension().is_none() {
-            let abs_prog = abs_prog.with_extension("exe");
-            if is_exe(&abs_prog) {
-                return Ok(abs_prog.to_path_buf());
+            for extension in ["com", "exe"] {
+                let abs_prog = abs_prog.with_extension(extension);
+                if is_exe(&abs_prog) {
+                    return Ok(abs_prog.to_path_buf());
+                }
             }
         }
     }

@@ -1090,6 +1090,19 @@ b=one
     eqnice!(expected, cmd.stdout());
 });
 
+// See: https://github.com/BurntSushi/ripgrep/issues/2198
+rgtest!(r2198, |dir: Dir, mut cmd: TestCommand| {
+    dir.create(".ignore", "a");
+    dir.create(".rgignore", "b");
+    dir.create("a", "");
+    dir.create("b", "");
+    dir.create("c", "");
+
+    cmd.arg("--files").arg("--sort").arg("path");
+    eqnice!("c\n", cmd.stdout());
+    eqnice!("a\nb\nc\n", cmd.arg("--no-ignore-dot").stdout());
+});
+
 // See: https://github.com/BurntSushi/ripgrep/issues/2208
 rgtest!(r2208, |dir: Dir, mut cmd: TestCommand| {
     dir.create("test", "# Compile requirements.txt files from all found or specified requirements.in files (compile).
@@ -1125,4 +1138,38 @@ rgtest!(r2236, |dir: Dir, mut cmd: TestCommand| {
     dir.create_dir("foo");
     dir.create("foo/bar", "test\n");
     cmd.args(&["test"]).assert_err();
+});
+
+// See: https://github.com/BurntSushi/ripgrep/issues/2480
+rgtest!(r2480, |dir: Dir, mut cmd: TestCommand| {
+    dir.create("file", "FooBar\n");
+
+    // no regression in empty pattern behavior
+    cmd.args(&["-e", "", "file"]);
+    eqnice!("FooBar\n", cmd.stdout());
+
+    // no regression in single pattern behavior
+    let mut cmd = dir.command();
+    cmd.args(&["-e", ")(", "file"]);
+    eqnice!("FooBar\n", cmd.stdout());
+
+    // no regression in multiple patterns behavior
+    let mut cmd = dir.command();
+    cmd.args(&["--only-matching", "-e", "Foo", "-e", "Bar", "file"]);
+    eqnice!("Foo\nBar\n", cmd.stdout());
+
+    // no regression in capture groups behavior
+    let mut cmd = dir.command();
+    cmd.args(&["-e", "Fo(oB)a(r)", "--replace", "${0}_${1}_${2}${3}", "file"]);
+    eqnice!("FooBar_oB_r\n", cmd.stdout()); // note: ${3} expected to be empty
+
+    // flag does not leak into next pattern on match
+    let mut cmd = dir.command();
+    cmd.args(&["--only-matching", "-e", "(?i)foo", "-e", "bar", "file"]);
+    eqnice!("Foo\n", cmd.stdout());
+
+    // flag does not leak into next pattern on mismatch
+    let mut cmd = dir.command();
+    cmd.args(&["--only-matching", "-e", "(?i)notfoo", "-e", "bar", "file"]);
+    cmd.assert_err();
 });
