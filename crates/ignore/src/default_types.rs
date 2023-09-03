@@ -91,7 +91,10 @@ pub const DEFAULT_TYPES: &[(&[&str], &[&str])] = &[
     (&["gn"], &["*.gn", "*.gni"]),
     (&["go"], &["*.go"]),
     (&["gprbuild"], &["*.gpr"]),
-    (&["gradle"], &["*.gradle"]),
+    (&["gradle"], &[
+        "*.gradle", "*.gradle.kts", "gradle.properties", "gradle-wrapper.*",
+        "gradlew", "gradlew.bat",
+    ]),
     (&["graphql"], &["*.graphql", "*.graphqls"]),
     (&["groovy"], &["*.groovy", "*.gradle"]),
     (&["gzip"], &["*.gz", "*.tgz"]),
@@ -198,6 +201,7 @@ pub const DEFAULT_TYPES: &[(&[&str], &[&str])] = &[
     (&["po"], &["*.po"]),
     (&["pod"], &["*.pod"]),
     (&["postscript"], &["*.eps", "*.ps"]),
+    (&["prolog"], &["*.pl", "*.pro", "*.prolog", "*.P"]),
     (&["protobuf"], &["*.proto"]),
     (&["ps"], &["*.cdxml", "*.ps1", "*.ps1xml", "*.psd1", "*.psm1"]),
     (&["puppet"], &["*.epp", "*.erb", "*.pp", "*.rb"]),
@@ -285,7 +289,7 @@ pub const DEFAULT_TYPES: &[(&[&str], &[&str])] = &[
     (&["txt"], &["*.txt"]),
     (&["typoscript"], &["*.typoscript", "*.ts"]),
     (&["usd"], &["*.usd", "*.usda", "*.usdc"]),
-    (&["v"], &["*.v"]),
+    (&["v"], &["*.v", "*.vsh"]),
     (&["vala"], &["*.vala"]),
     (&["vb"], &["*.vb"]),
     (&["vcl"], &["*.vcl"]),
@@ -327,7 +331,9 @@ mod tests {
     #[test]
     fn default_types_are_sorted() {
         let mut names = DEFAULT_TYPES.iter().map(|(aliases, _)| aliases[0]);
-        let Some(mut previous_name) = names.next() else { return; };
+        let Some(mut previous_name) = names.next() else {
+            return;
+        };
         for name in names {
             assert!(
                 name > previous_name,
