@@ -8,6 +8,11 @@ Unreleased changes. Release notes have not yet been written.
   `rg -B1 -A2`. That is, `-A` and `-B` no longer completely override `-C`.
   Instead, they only partially override `-C`.
 
+Performance improvements:
+
+* [PERF #2591](https://github.com/BurntSushi/ripgrep/pull/2591):
+  Parallel directory traversal now uses work stealing for faster searches.
+
 Feature enhancements:
 
 * Added or improved file type filtering for Ada, DITA, Elixir, Fuchsia, Gentoo,
@@ -21,6 +26,8 @@ Feature enhancements:
 
 Bug fixes:
 
+* [BUG #1757](https://github.com/BurntSushi/ripgrep/issues/1757):
+  Fix bug when searching a sub-directory didn't have ignores applied correctly.
 * [BUG #1891](https://github.com/BurntSushi/ripgrep/issues/1891):
   Fix bug when using `-w` with a regex that can match the empty string.
 * [BUG #1911](https://github.com/BurntSushi/ripgrep/issues/1911):
