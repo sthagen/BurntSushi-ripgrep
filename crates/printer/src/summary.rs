@@ -1,17 +1,24 @@
-use std::cell::RefCell;
-use std::io::{self, Write};
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Instant;
+use std::{
+    cell::RefCell,
+    io::{self, Write},
+    path::Path,
+    sync::Arc,
+    time::Instant,
+};
 
-use grep_matcher::Matcher;
-use grep_searcher::{Searcher, Sink, SinkError, SinkFinish, SinkMatch};
-use termcolor::{ColorSpec, NoColor, WriteColor};
+use {
+    grep_matcher::Matcher,
+    grep_searcher::{Searcher, Sink, SinkError, SinkFinish, SinkMatch},
+    termcolor::{ColorSpec, NoColor, WriteColor},
+};
 
-use crate::color::ColorSpecs;
-use crate::counter::CounterWriter;
-use crate::stats::Stats;
-use crate::util::{find_iter_at_in_context, PrinterPath};
+use crate::{
+    color::ColorSpecs,
+    counter::CounterWriter,
+    hyperlink::{self, HyperlinkConfig},
+    stats::Stats,
+    util::{find_iter_at_in_context, PrinterPath},
+};
 
 /// The configuration for the summary printer.
 ///
@@ -22,6 +29,7 @@ use crate::util::{find_iter_at_in_context, PrinterPath};
 struct Config {
     kind: SummaryKind,
     colors: ColorSpecs,
+    hyperlink: HyperlinkConfig,
     stats: bool,
     path: bool,
     max_matches: Option<u64>,
@@ -36,6 +44,7 @@ impl Default for Config {
         Config {
             kind: SummaryKind::Count,
             colors: ColorSpecs::default(),
+            hyperlink: HyperlinkConfig::default(),
             stats: false,
             path: true,
             max_matches: None,
@@ -206,6 +215,25 @@ impl SummaryBuilder {
         self
     }
 
+    /// Set the configuration to use for hyperlinks output by this printer.
+    ///
+    /// Regardless of the hyperlink format provided here, whether hyperlinks
+    /// are actually used or not is determined by the implementation of
+    /// `WriteColor` provided to `build`. For example, if `termcolor::NoColor`
+    /// is provided to `build`, then no hyperlinks will ever be printed
+    /// regardless of the format provided here.
+    ///
+    /// This completely overrides any previous hyperlink format.
+    ///
+    /// The default configuration results in not emitting any hyperlinks.
+    pub fn hyperlink(
+        &mut self,
+        config: HyperlinkConfig,
+    ) -> &mut SummaryBuilder {
+        self.config.hyperlink = config;
+        self
+    }
+
     /// Enable the gathering of various aggregate statistics.
     ///
     /// When this is enabled (it's disabled by default), statistics will be
@@ -370,19 +398,22 @@ impl<W: WriteColor> Summary<W> {
         &'s mut self,
         matcher: M,
     ) -> SummarySink<'static, 's, M, W> {
+        let interpolator =
+            hyperlink::Interpolator::new(&self.config.hyperlink);
         let stats = if self.config.stats || self.config.kind.requires_stats() {
             Some(Stats::new())
         } else {
             None
         };
         SummarySink {
-            matcher: matcher,
+            matcher,
             summary: self,
+            interpolator,
             path: None,
             start_time: Instant::now(),
             match_count: 0,
             binary_byte_offset: None,
-            stats: stats,
+            stats,
         }
     }
 
@@ -402,23 +433,24 @@ impl<W: WriteColor> Summary<W> {
         if !self.config.path && !self.config.kind.requires_path() {
             return self.sink(matcher);
         }
+        let interpolator =
+            hyperlink::Interpolator::new(&self.config.hyperlink);
         let stats = if self.config.stats || self.config.kind.requires_stats() {
             Some(Stats::new())
         } else {
             None
         };
-        let ppath = PrinterPath::with_separator(
-            path.as_ref(),
-            self.config.separator_path,
-        );
+        let ppath = PrinterPath::new(path.as_ref())
+            .with_separator(self.config.separator_path);
         SummarySink {
-            matcher: matcher,
+            matcher,
             summary: self,
+            interpolator,
             path: Some(ppath),
             start_time: Instant::now(),
             match_count: 0,
             binary_byte_offset: None,
-            stats: stats,
+            stats,
         }
     }
 }
@@ -460,6 +492,7 @@ impl<W> Summary<W> {
 pub struct SummarySink<'p, 's, M: Matcher, W> {
     matcher: M,
     summary: &'s mut Summary<W>,
+    interpolator: hyperlink::Interpolator,
     path: Option<PrinterPath<'p>>,
     start_time: Instant,
     match_count: u64,
@@ -532,12 +565,9 @@ impl<'p, 's, M: Matcher, W: WriteColor> SummarySink<'p, 's, M, W> {
     /// write that path to the underlying writer followed by a line terminator.
     /// (If a path terminator is set, then that is used instead of the line
     /// terminator.)
-    fn write_path_line(&self, searcher: &Searcher) -> io::Result<()> {
-        if let Some(ref path) = self.path {
-            self.write_spec(
-                self.summary.config.colors.path(),
-                path.as_bytes(),
-            )?;
+    fn write_path_line(&mut self, searcher: &Searcher) -> io::Result<()> {
+        if self.path.is_some() {
+            self.write_path()?;
             if let Some(term) = self.summary.config.path_terminator {
                 self.write(&[term])?;
             } else {
@@ -551,12 +581,9 @@ impl<'p, 's, M: Matcher, W: WriteColor> SummarySink<'p, 's, M, W> {
     /// write that path to the underlying writer followed by the field
     /// separator. (If a path terminator is set, then that is used instead of
     /// the field separator.)
-    fn write_path_field(&self) -> io::Result<()> {
-        if let Some(ref path) = self.path {
-            self.write_spec(
-                self.summary.config.colors.path(),
-                path.as_bytes(),
-            )?;
+    fn write_path_field(&mut self) -> io::Result<()> {
+        if self.path.is_some() {
+            self.write_path()?;
             if let Some(term) = self.summary.config.path_terminator {
                 self.write(&[term])?;
             } else {
@@ -564,6 +591,41 @@ impl<'p, 's, M: Matcher, W: WriteColor> SummarySink<'p, 's, M, W> {
             }
         }
         Ok(())
+    }
+
+    /// If this printer has a file path associated with it, then this will
+    /// write that path to the underlying writer in the appropriate style
+    /// (color and hyperlink).
+    fn write_path(&mut self) -> io::Result<()> {
+        if self.path.is_some() {
+            let status = self.start_hyperlink()?;
+            self.write_spec(
+                self.summary.config.colors.path(),
+                self.path.as_ref().unwrap().as_bytes(),
+            )?;
+            self.end_hyperlink(status)?;
+        }
+        Ok(())
+    }
+
+    /// Starts a hyperlink span when applicable.
+    fn start_hyperlink(
+        &mut self,
+    ) -> io::Result<hyperlink::InterpolatorStatus> {
+        let Some(hyperpath) =
+            self.path.as_ref().and_then(|p| p.as_hyperlink())
+        else {
+            return Ok(hyperlink::InterpolatorStatus::inactive());
+        };
+        let values = hyperlink::Values::new(hyperpath);
+        self.interpolator.begin(&values, &mut *self.summary.wtr.borrow_mut())
+    }
+
+    fn end_hyperlink(
+        &self,
+        status: hyperlink::InterpolatorStatus,
+    ) -> io::Result<()> {
+        self.interpolator.finish(status, &mut *self.summary.wtr.borrow_mut())
     }
 
     /// Write the line terminator configured on the given searcher.
@@ -704,11 +766,11 @@ impl<'p, 's, M: Matcher, W: WriteColor> Sink for SummarySink<'p, 's, M, W> {
             }
             SummaryKind::CountMatches => {
                 if show_count {
+                    self.write_path_field()?;
                     let stats = self
                         .stats
                         .as_ref()
                         .expect("CountMatches should enable stats tracking");
-                    self.write_path_field()?;
                     self.write(stats.matches().to_string().as_bytes())?;
                     self.write_line_term(searcher)?;
                 }

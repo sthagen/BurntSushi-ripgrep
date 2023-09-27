@@ -1,8 +1,6 @@
-use std::io;
+use std::io::{self, IsTerminal};
 
-use termcolor;
-
-use crate::is_tty_stdout;
+use termcolor::{self, HyperlinkSpec};
 
 /// A writer that supports coloring with either line or block buffering.
 pub struct StandardStream(StandardStreamKind);
@@ -22,7 +20,7 @@ pub struct StandardStream(StandardStreamKind);
 /// The color choice given is passed along to the underlying writer. To
 /// completely disable colors in all cases, use `ColorChoice::Never`.
 pub fn stdout(color_choice: termcolor::ColorChoice) -> StandardStream {
-    if is_tty_stdout() {
+    if std::io::stdout().is_terminal() {
         stdout_buffered_line(color_choice)
     } else {
         stdout_buffered_block(color_choice)
@@ -102,12 +100,32 @@ impl termcolor::WriteColor for StandardStream {
     }
 
     #[inline]
+    fn supports_hyperlinks(&self) -> bool {
+        use self::StandardStreamKind::*;
+
+        match self.0 {
+            LineBuffered(ref w) => w.supports_hyperlinks(),
+            BlockBuffered(ref w) => w.supports_hyperlinks(),
+        }
+    }
+
+    #[inline]
     fn set_color(&mut self, spec: &termcolor::ColorSpec) -> io::Result<()> {
         use self::StandardStreamKind::*;
 
         match self.0 {
             LineBuffered(ref mut w) => w.set_color(spec),
             BlockBuffered(ref mut w) => w.set_color(spec),
+        }
+    }
+
+    #[inline]
+    fn set_hyperlink(&mut self, link: &HyperlinkSpec) -> io::Result<()> {
+        use self::StandardStreamKind::*;
+
+        match self.0 {
+            LineBuffered(ref mut w) => w.set_hyperlink(link),
+            BlockBuffered(ref mut w) => w.set_hyperlink(link),
         }
     }
 
