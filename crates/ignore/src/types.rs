@@ -84,18 +84,14 @@ assert!(matcher.matched("y.cpp", false).is_whitelist());
 ```
 */
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::Arc;
+use std::{collections::HashMap, path::Path, sync::Arc};
 
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use regex::Regex;
-use thread_local::ThreadLocal;
+use {
+    globset::{GlobBuilder, GlobSet, GlobSetBuilder},
+    regex_automata::util::pool::Pool,
+};
 
-use crate::default_types::DEFAULT_TYPES;
-use crate::pathutil::file_name;
-use crate::{Error, Match};
+use crate::{default_types::DEFAULT_TYPES, pathutil::file_name, Error, Match};
 
 /// Glob represents a single glob in a set of file type definitions.
 ///
@@ -181,7 +177,7 @@ pub struct Types {
     /// The set of all glob selections, used for actual matching.
     set: GlobSet,
     /// Temporary storage for globs that match.
-    matches: Arc<ThreadLocal<RefCell<Vec<usize>>>>,
+    matches: Arc<Pool<Vec<usize>>>,
 }
 
 /// Indicates the type of a selection for a particular file type.
@@ -235,7 +231,7 @@ impl Types {
             has_selected: false,
             glob_to_selection: vec![],
             set: GlobSetBuilder::new().build().unwrap(),
-            matches: Arc::new(ThreadLocal::default()),
+            matches: Arc::new(Pool::new(|| vec![])),
         }
     }
 
@@ -283,7 +279,7 @@ impl Types {
                 return Match::None;
             }
         };
-        let mut matches = self.matches.get_or_default().borrow_mut();
+        let mut matches = self.matches.get();
         self.set.matches_into(name, &mut *matches);
         // The highest precedent match is the last one.
         if let Some(&i) = matches.last() {
@@ -356,12 +352,12 @@ impl TypesBuilder {
             .build()
             .map_err(|err| Error::Glob { glob: None, err: err.to_string() })?;
         Ok(Types {
-            defs: defs,
-            selections: selections,
-            has_selected: has_selected,
-            glob_to_selection: glob_to_selection,
-            set: set,
-            matches: Arc::new(ThreadLocal::default()),
+            defs,
+            selections,
+            has_selected,
+            glob_to_selection,
+            set,
+            matches: Arc::new(Pool::new(|| vec![])),
         })
     }
 
@@ -419,10 +415,7 @@ impl TypesBuilder {
     /// If `name` is `all` or otherwise contains any character that is not a
     /// Unicode letter or number, then an error is returned.
     pub fn add(&mut self, name: &str, glob: &str) -> Result<(), Error> {
-        lazy_static::lazy_static! {
-            static ref RE: Regex = Regex::new(r"^[\pL\pN]+$").unwrap();
-        };
-        if name == "all" || !RE.is_match(name) {
+        if name == "all" || !name.chars().all(|c| c.is_alphanumeric()) {
             return Err(Error::InvalidDefinition);
         }
         let (key, glob) = (name.to_string(), glob.to_string());

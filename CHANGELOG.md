@@ -10,6 +10,8 @@ Unreleased changes. Release notes have not yet been written.
 
 Performance improvements:
 
+* [PERF #1760](https://github.com/BurntSushi/ripgrep/issues/1760):
+  Make most searches with `\b` look-arounds (among others) much faster.
 * [PERF #2591](https://github.com/BurntSushi/ripgrep/pull/2591):
   Parallel directory traversal now uses work stealing for faster searches.
 
@@ -26,6 +28,8 @@ Feature enhancements:
 
 Bug fixes:
 
+* [BUG #1275](https://github.com/BurntSushi/ripgrep/issues/1275):
+  Fix bug with `\b` assertion in the regex engine.
 * [BUG #1757](https://github.com/BurntSushi/ripgrep/issues/1757):
   Fix bug when searching a sub-directory didn't have ignores applied correctly.
 * [BUG #1891](https://github.com/BurntSushi/ripgrep/issues/1891):
@@ -48,6 +52,8 @@ Bug fixes:
   Make executable searching take `.com` into account on Windows.
 * [BUG #2574](https://github.com/BurntSushi/ripgrep/issues/2574):
   Fix bug in `-w/--word-regexp` that would result in incorrect match offsets.
+* [BUG #2623](https://github.com/BurntSushi/ripgrep/issues/2623):
+  Fix a number of bugs with the `-w/--word-regexp` flag.
 
 
 13.0.0 (2021-06-12)
