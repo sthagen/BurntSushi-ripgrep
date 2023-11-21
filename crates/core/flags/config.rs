@@ -1,6 +1,9 @@
-// This module provides routines for reading ripgrep config "rc" files. The
-// primary output of these routines is a sequence of arguments, where each
-// argument corresponds precisely to one shell argument.
+/*!
+This module provides routines for reading ripgrep config "rc" files.
+
+The primary output of these routines is a sequence of arguments, where each
+argument corresponds precisely to one shell argument.
+*/
 
 use std::{
     ffi::OsString,
@@ -53,11 +56,11 @@ pub fn args() -> Vec<OsString> {
 /// for each line in addition to successfully parsed arguments.
 fn parse<P: AsRef<Path>>(
     path: P,
-) -> crate::Result<(Vec<OsString>, Vec<Box<dyn std::error::Error>>)> {
+) -> anyhow::Result<(Vec<OsString>, Vec<anyhow::Error>)> {
     let path = path.as_ref();
     match std::fs::File::open(&path) {
         Ok(file) => parse_reader(file),
-        Err(err) => Err(From::from(format!("{}: {}", path.display(), err))),
+        Err(err) => anyhow::bail!("{}: {}", path.display(), err),
     }
 }
 
@@ -74,7 +77,7 @@ fn parse<P: AsRef<Path>>(
 /// in addition to successfully parsed arguments.
 fn parse_reader<R: std::io::Read>(
     rdr: R,
-) -> crate::Result<(Vec<OsString>, Vec<Box<dyn std::error::Error>>)> {
+) -> anyhow::Result<(Vec<OsString>, Vec<anyhow::Error>)> {
     let mut bufrdr = std::io::BufReader::new(rdr);
     let (mut args, mut errs) = (vec![], vec![]);
     let mut line_number = 0;
@@ -90,7 +93,7 @@ fn parse_reader<R: std::io::Read>(
                 args.push(osstr.to_os_string());
             }
             Err(err) => {
-                errs.push(format!("{}: {}", line_number, err).into());
+                errs.push(anyhow::anyhow!("{line_number}: {err}"));
             }
         }
         Ok(true)
