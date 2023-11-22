@@ -8,12 +8,23 @@ Unreleased changes. Release notes have not yet been written.
   `rg -B1 -A2`. That is, `-A` and `-B` no longer completely override `-C`.
   Instead, they only partially override `-C`.
 
+Build process changes:
+
+* ripgrep's shell completions and man page are now created by running ripgrep
+with a new `--generate` flag. For example, `rg --generate man` will write a
+man page in `roff` format on stdout. The release archives have not changed.
+* The optional build dependency on `asciidoc` or `asciidoctor` has been
+dropped. Previously, it was used to produce ripgrep's man page. ripgrep now
+owns this process itself by writing `roff` directly.
+
 Performance improvements:
 
 * [PERF #1760](https://github.com/BurntSushi/ripgrep/issues/1760):
   Make most searches with `\b` look-arounds (among others) much faster.
 * [PERF #2591](https://github.com/BurntSushi/ripgrep/pull/2591):
   Parallel directory traversal now uses work stealing for faster searches.
+* [PERF #2642](https://github.com/BurntSushi/ripgrep/pull/2642):
+  Parallel directory traversal has some contention reduced.
 
 Feature enhancements:
 
@@ -27,6 +38,8 @@ Feature enhancements:
   When `extra-verbose` mode is enabled in zsh, show extra file type info.
 * [FEATURE #2409](https://github.com/BurntSushi/ripgrep/pull/2409):
   Added installation instructions for `winget`.
+* [FEATURE #2643](https://github.com/BurntSushi/ripgrep/issues/2643):
+  Make `-d` a short flag for `--max-depth`.
 
 Bug fixes:
 
@@ -56,6 +69,8 @@ Bug fixes:
   Fix gitignore parsing bug where a trailing `\/` resulted in an error.
 * [BUG #2243](https://github.com/BurntSushi/ripgrep/issues/2243):
   Fix `--sort` flag for values other than `path`.
+* [BUG #2381](https://github.com/BurntSushi/ripgrep/issues/2381):
+  Make `-p/--pretty` override flags like `--no-line-number`.
 * [BUG #2392](https://github.com/BurntSushi/ripgrep/issues/2392):
   Improve global git config parsing of the `excludesFile` field.
 * [BUG #2480](https://github.com/BurntSushi/ripgrep/issues/2480):
@@ -66,6 +81,8 @@ Bug fixes:
   Fix bug in `-w/--word-regexp` that would result in incorrect match offsets.
 * [BUG #2623](https://github.com/BurntSushi/ripgrep/issues/2623):
   Fix a number of bugs with the `-w/--word-regexp` flag.
+* [BUG #2636](https://github.com/BurntSushi/ripgrep/pull/2636):
+  Strip release binaries for macOS.
 
 
 13.0.0 (2021-06-12)

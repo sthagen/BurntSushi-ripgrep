@@ -115,12 +115,6 @@ jobs:
       run: |
         ci/ubuntu-install-packages
 
-    - name: Install packages (macOS)
-      if: matrix.os == 'macos-latest'
-      shell: bash
-      run: |
-        ci/macos-install-packages
-
     - name: Install Rust
       uses: dtolnay/rust-toolchain@master
       with:
@@ -167,7 +161,7 @@ jobs:
         echo "BIN=$bin" >> $GITHUB_ENV
 
     - name: Strip release binary (macos)
-      if: matrix.os == 'macos'
+      if: matrix.os == 'macos-latest'
       shell: bash
       run: strip "$BIN"
 
