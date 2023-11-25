@@ -537,9 +537,8 @@ When enabled, ripgrep will use block buffering. That is, whenever a matching
 line is found, it will be written to an in-memory buffer and will not be
 written to stdout until the buffer reaches a certain size. This is the default
 when ripgrep's stdout is redirected to a pipeline or a file. When ripgrep's
-stdout is connected to a terminal, line buffering will be used by default.
-Forcing block buffering can be useful when dumping a large amount of contents
-to a terminal.
+stdout is connected to a tty, line buffering will be used by default. Forcing
+block buffering can be useful when dumping a large amount of contents to a tty.
 .sp
 This overrides the \flag{line-buffered} flag.
 "
@@ -709,8 +708,8 @@ impl Flag for Color {
         r"
 This flag controls when to use colors. The default setting is \fBauto\fP, which
 means ripgrep will try to guess when to use colors. For example, if ripgrep is
-printing to a terminal, then it will use colors, but if it is redirected to a
-file or a pipe, then it will suppress color output.
+printing to a tty, then it will use colors, but if it is redirected to a file
+or a pipe, then it will suppress color output.
 .sp
 ripgrep will suppress color output by default in some other circumstances as
 well. These include, but are not limited to:
@@ -851,8 +850,8 @@ the background color for line numbers to yellow:
     rg \-\-colors 'match:fg:magenta' \-\-colors 'line:bg:yellow'
 .EE
 .sp
-Extended colors can be used for \fIvalue\fP when the terminal supports
-ANSI color sequences. These are specified as either \fIx\fP (256-color) or
+Extended colors can be used for \fIvalue\fP when the tty supports ANSI color
+sequences. These are specified as either \fIx\fP (256-color) or
 .IB x , x , x
 (24-bit truecolor) where \fIx\fP is a number between \fB0\fP and \fB255\fP
 inclusive. \fIx\fP may be given as a normal decimal number or a hexadecimal
@@ -2615,10 +2614,11 @@ impl Flag for Heading {
     fn doc_long(&self) -> &'static str {
         r"
 This flag prints the file path above clusters of matches from each file instead
-of printing the file path as a prefix for each matched line. This is the
-default mode when printing to a terminal.
+of printing the file path as a prefix for each matched line.
 .sp
-When \fBstdout\fP is not a terminal, then ripgrep will default to the standard
+This is the default mode when printing to a tty.
+.sp
+When \fBstdout\fP is not a tty, then ripgrep will default to the standard
 grep-like format. Once can force this format in Unix-like environments by
 piping the output of ripgrep to \fBcat\fP. For example, \fBrg\fP \fIfoo\fP \fB|
 cat\fP.
@@ -3392,7 +3392,8 @@ flags are used in concert with \flag{json}.
 .sp
 Other flags that control aspects of the standard output such as
 \flag{only-matching}, \flag{heading}, \flag{replace}, \flag{max-columns}, etc.,
-have no effect when \flag{json} is set.
+have no effect when \flag{json} is set. However, enabling JSON output will
+always implicitly and unconditionally enable \flag{stats}.
 .sp
 A more complete description of the JSON format used can be found here:
 \fIhttps://docs.rs/grep-printer/*/grep_printer/struct.JSON.html\fP.
@@ -3453,11 +3454,11 @@ impl Flag for LineBuffered {
     fn doc_long(&self) -> &'static str {
         r"
 When enabled, ripgrep will always use line buffering. That is, whenever a
-matching line is found, it will be flushed to stdout immediately. This is
-the default when ripgrep's stdout is connected to a terminal, but otherwise,
-ripgrep will use block buffering, which is typically faster. This flag forces
-ripgrep to use line buffering even if it would otherwise use block buffering.
-This is typically useful in shell pipelines, for example:
+matching line is found, it will be flushed to stdout immediately. This is the
+default when ripgrep's stdout is connected to a tty, but otherwise, ripgrep
+will use block buffering, which is typically faster. This flag forces ripgrep
+to use line buffering even if it would otherwise use block buffering. This is
+typically useful in shell pipelines, for example:
 .sp
 .EX
     tail -f something.log | rg foo --line-buffered | rg bar
@@ -3516,8 +3517,9 @@ impl Flag for LineNumber {
     }
     fn doc_long(&self) -> &'static str {
         r"
-Show line numbers (1-based). This is enabled by default stdout is connected to
-a tty.
+Show line numbers (1-based).
+.sp
+This is enabled by default when stdout is connected to a tty.
 .sp
 This flag can be disabled by \flag{no-line-number}.
 "
@@ -3568,8 +3570,9 @@ impl Flag for LineNumberNo {
     }
     fn doc_long(&self) -> &'static str {
         r"
-Suppress line numbers. Line numbers are off by default when stdout is not
-connected to a tty.
+Suppress line numbers.
+.sp
+Line numbers are off by default when stdout is not connected to a tty.
 .sp
 Line numbers can be forcefully turned on by \flag{line-number}.
 "
@@ -4734,7 +4737,7 @@ impl Flag for NoRequireGit {
     fn doc_long(&self) -> &'static str {
         r"
 When this flag is given, source control ignore files such as \fB.gitignore\fP
-are respect even if no \fBgit\fP repository is present.
+are respected even if no \fBgit\fP repository is present.
 .sp
 By default, ripgrep will only respect filter rules from source control ignore
 files when ripgrep detects that the search is executed inside a source control
@@ -5358,9 +5361,9 @@ impl Flag for Pre {
     fn doc_long(&self) -> &'static str {
         r#"
 For each input \fIPATH\fP, this flag causes ripgrep to search the standard
-output of \fICOMMAND\fP \fIPATH\fP instead of the contents of \fIPATH\fP. This
-option expects the \fICOMMAND\fP program to either be an absolute path or to
-be available in your \fBPATH\fP. Either an empty string \fICOMMAND\fP or the
+output of \fICOMMAND\fP \fIPATH\fP instead of the contents of \fIPATH\fP.
+This option expects the \fICOMMAND\fP program to either be a path or to be
+available in your \fBPATH\fP. Either an empty string \fICOMMAND\fP or the
 \fB\-\-no\-pre\fP flag will disable this behavior.
 .sp
 .TP 12
@@ -5966,7 +5969,9 @@ impl Flag for SearchZip {
 This flag instructs ripgrep to search in compressed files. Currently gzip,
 bzip2, xz, LZ4, LZMA, Brotli and Zstd files are supported. This option expects
 the decompression binaries (such as \fBgzip\fP) to be available in your
-\fBPATH\fP.
+\fBPATH\fP. If the required binaries are not found, then ripgrep will not
+emit an error messages by default. Use the \flag{debug} flag to see more
+information.
 .sp
 Note that this flag does not make ripgrep search archive formats as directory
 trees. It only makes ripgrep detect compressed files and then decompress them
@@ -6205,7 +6210,10 @@ for this flag are:
 (Default) Do not sort results. Fastest. Can be multi-threaded.
 .TP 12
 \fBpath\fP
-Sort by file path. Always single-threaded.
+Sort by file path. Always single-threaded. The order is determined by sorting
+files in each directory entry during traversal. This means that given the files
+\fBa/b\fP and \fBa+\fP, the latter will sort after the former even though
+\fB+\fP would normally sort before \fB/\fP.
 .TP 12
 \fBmodified\fP
 Sort by the last modified time on a file. Always single-threaded.
@@ -6220,8 +6228,8 @@ If the chosen (manually or by-default) sorting criteria isn't available on your
 system (for example, creation time is not available on ext4 file systems), then
 ripgrep will attempt to detect this, print an error and exit without searching.
 .sp
-To sort results in reverse or descending order, use the \flag{sortr} flag. Also,
-this flag overrides \flag{sortr}.
+To sort results in reverse or descending order, use the \flag{sortr} flag.
+Also, this flag overrides \flag{sortr}.
 .sp
 Note that sorting results currently always forces ripgrep to abandon
 parallelism and run in a single thread.
@@ -6303,7 +6311,11 @@ for this flag are:
 (Default) Do not sort results. Fastest. Can be multi-threaded.
 .TP 12
 \fBpath\fP
-Sort by file path. Always single-threaded.
+Sort by file path. Always single-threaded. The order is determined by sorting
+files in each directory entry during traversal. This means that given the files
+\fBa/b\fP and \fBa+\fP, the latter will sort before the former even though
+\fB+\fP would normally sort after \fB/\fP when doing a reverse lexicographic
+sort.
 .TP 12
 \fBmodified\fP
 Sort by the last modified time on a file. Always single-threaded.
@@ -6412,6 +6424,8 @@ matches, number of files searched, and the time taken for the entire search to
 complete.
 .sp
 This set of aggregate statistics may expand over time.
+.sp
+This flag is always and implicitly enabled when \flag{json} is used.
 .sp
 Note that this flag has no effect if \flag{files}, \flag{files-with-matches} or
 \flag{files-without-match} is passed.
@@ -6760,6 +6774,9 @@ This flag supports the special value \fBall\fP, which will behave as if
 any custom file types). The end result is that \fB\-\-type=all\fP causes
 ripgrep to search in "whitelist" mode, where it will only search files it
 recognizes via its type definitions.
+.sp
+Note that this flag has lower precedence than both the \flag{glob} flag and
+any rules found in ignore files.
 .sp
 To see the list of available file types, use the \flag{type-list} flag.
 "#
@@ -7235,6 +7252,10 @@ if the pattern matches every byte in an input file, then each line will be
 repeated for every byte matched. For this reason, users should only use this
 flag when there is no other choice. Editor integrations should prefer some
 other way of reading results from ripgrep, such as via the \flag{json} flag.
+One alternative to avoiding exorbitant memory usage is to force ripgrep into
+single threaded mode with the \flag{threads} flag. Note though that this will
+not impact the total size of the output, just the heap memory that ripgrep will
+use.
 "
     }
     fn doc_choices(&self) -> &'static [&'static str] {
@@ -7282,9 +7303,9 @@ impl Flag for WithFilename {
         r"
 This flag instructs ripgrep to print the file path for each matching line.
 This is the default when more than one file is searched. If \flag{heading} is
-enabled (the default when printing to a terminal), the file path will be shown
-above clusters of matches from each file; otherwise, the file name will be
-shown as a prefix for each matched line.
+enabled (the default when printing to a tty), the file path will be shown above
+clusters of matches from each file; otherwise, the file name will be shown as a
+prefix for each matched line.
 .sp
 This flag overrides \flag{no-filename}.
 "

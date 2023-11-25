@@ -171,6 +171,7 @@ impl HiArgs {
         } else {
             std::thread::available_parallelism().map_or(1, |n| n.get()).min(12)
         };
+        log::debug!("using {threads} thread(s)");
         let with_filename = low
             .with_filename
             .unwrap_or_else(|| low.vimgrep || !paths.is_one_file);
@@ -498,9 +499,14 @@ impl HiArgs {
         if let Some(limit) = self.dfa_size_limit {
             builder.dfa_size_limit(limit);
         }
+        if !self.binary.is_none() {
+            builder.ban_byte(Some(b'\x00'));
+        }
         let m = match builder.build_many(&self.patterns.patterns) {
             Ok(m) => m,
-            Err(err) => anyhow::bail!(suggest_multiline(err.to_string())),
+            Err(err) => {
+                anyhow::bail!(suggest_text(suggest_multiline(err.to_string())))
+            }
         };
         Ok(PatternMatcher::RustRegex(m))
     }
@@ -1080,12 +1086,24 @@ impl Paths {
         // mode, but there really is no good way to mitigate it. It's just a
         // consequence of letting the user type 'rg foo' and "guessing" that
         // they meant to search the CWD.
-        let use_cwd = !grep::cli::is_readable_stdin()
+        let is_readable_stdin = grep::cli::is_readable_stdin();
+        let use_cwd = !is_readable_stdin
             || state.stdin_consumed
             || !matches!(low.mode, Mode::Search(_));
+        log::debug!(
+            "using heuristics to determine whether to read from \
+             stdin or search ./ (\
+             is_readable_stdin={is_readable_stdin}, \
+             stdin_consumed={stdin_consumed}, \
+             mode={mode:?})",
+            stdin_consumed = state.stdin_consumed,
+            mode = low.mode,
+        );
         let (path, is_one_file) = if use_cwd {
+            log::debug!("heuristic chose to search ./");
             (PathBuf::from("./"), false)
         } else {
+            log::debug!("heuristic chose to search stdin");
             (PathBuf::from("-"), true)
         };
         Ok(Paths { paths: vec![path], has_implicit_path: true, is_one_file })
@@ -1130,6 +1148,13 @@ impl BinaryDetection {
             grep::searcher::BinaryDetection::quit(b'\x00')
         };
         BinaryDetection { explicit, implicit }
+    }
+
+    /// Returns true when both implicit and explicit binary detection is
+    /// disabled.
+    pub(crate) fn is_none(&self) -> bool {
+        let none = grep::searcher::BinaryDetection::none();
+        self.explicit == none && self.implicit == none
     }
 }
 
@@ -1410,6 +1435,20 @@ fn suggest_multiline(msg: String) -> String {
 
 Consider enabling multiline mode with the --multiline flag (or -U for short).
 When multiline mode is enabled, new line characters can be matched.",
+        )
+    } else {
+        msg
+    }
+}
+
+/// Possibly suggest the `-a/--text` flag.
+fn suggest_text(msg: String) -> String {
+    if msg.contains("pattern contains \"\\0\"") {
+        format!(
+            "{msg}
+
+Consider enabling text mode with the --text flag (or -a for short). Otherwise,
+binary detection is enabled and matching a NUL byte is impossible.",
         )
     } else {
         msg
