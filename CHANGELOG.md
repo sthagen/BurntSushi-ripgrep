@@ -1,8 +1,35 @@
-TBD
-===
-Unreleased changes. Release notes have not yet been written.
+14.0.0 (2023-11-26)
+===================
+ripgrep 14 is a new major version release of ripgrep that has some new
+features, performance improvements and a lot of bug fixes.
 
-**BREAKING CHANGES**
+The headling feature in this release is hyperlink support. In this release,
+they are an opt-in feature but may change to an opt-out feature in the future.
+To enable them, try passing `--hyperlink-format default`. If you use [VS Code],
+then try passing `--hyperlink-format vscode`. Please [report your experience
+with hyperlinks][report-hyperlinks], positive or negative.
+
+[VS Code]: https://code.visualstudio.com/
+[report-hyperlinks]: https://github.com/BurntSushi/ripgrep/discussions/2611
+
+Another headling development in this release is that it contains a rewrite of
+its regex engine. You generally shouldn't notice any changes, except for some
+searches may get faster. You can read more about the [regex engine rewrite on
+my blog][regex-internals]. Please [report your performance improvements or
+regressions that you notice][report-perf].
+
+[report-perf]: https://github.com/BurntSushi/ripgrep/discussions/2652
+
+Finally, ripgrep switched the library it uses for argument parsing. Users
+should not notice a difference in most cases (error messages have changed
+somewhat), but flag overrides should generally be more consistent. For example,
+things like `--no-ignore --ignore-vcs` work as one would expect (disables all
+filtering related to ignore rules except for rules found in version control
+systems such as `git`).
+
+[regex-internals]: https://blog.burntsushi.net/regex-internals/
+
+**BREAKING CHANGES**:
 
 * `rg -C1 -A2` used to be equivalent to `rg -A2`, but now it is equivalent to
   `rg -B1 -A2`. That is, `-A` and `-B` no longer completely override `-C`.
@@ -32,6 +59,8 @@ Feature enhancements:
 
 * Added or improved file type filtering for Ada, DITA, Elixir, Fuchsia, Gentoo,
   Gradle, GraphQL, Markdown, Prolog, Raku, TypeScript, USD, V
+* [FEATURE #665](https://github.com/BurntSushi/ripgrep/issues/665):
+  Add a new `--hyperlink-format` flag that turns file paths into hyperlinks.
 * [FEATURE #1709](https://github.com/BurntSushi/ripgrep/issues/1709):
   Improve documentation of ripgrep's behavior when stdout is a tty.
 * [FEATURE #1737](https://github.com/BurntSushi/ripgrep/issues/1737):
