@@ -1,6 +1,6 @@
 [package]
 name = "ripgrep"
-version = "14.0.0"  #:version
+version = "14.0.1"  #:version
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = """
 ripgrep is a line-oriented search tool that recursively searches the current
@@ -17,7 +17,7 @@ exclude = [
   "HomebrewFormula",
   "/.github/",
   "/ci/",
-  "/pkg/",
+  "/pkg/brew",
   "/benchsuite/",
   "/scripts/",
 ]
@@ -51,7 +51,7 @@ members = [
 [dependencies]
 anyhow = "1.0.75"
 bstr = "1.7.0"
-grep = { version = "0.2.13", path = "crates/grep" }
+grep = { version = "0.3.0", path = "crates/grep" }
 ignore = { version = "0.4.21", path = "crates/ignore" }
 lexopt = "0.3.0"
 log = "0.4.5"
