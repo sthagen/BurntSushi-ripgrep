@@ -134,7 +134,7 @@ dependencies = [
 
 [[package]]
 name = "grep"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "grep-cli",
  "grep-matcher",
@@ -177,7 +177,7 @@ dependencies = [
 
 [[package]]
 name = "grep-printer"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bstr",
  "grep-matcher",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "grep-searcher"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "bstr",
  "encoding_rs",
@@ -411,7 +411,7 @@ checksum = "c08c74e62047bb2de4ff487b251e4a92e24f48745648451635cec7d591162d9f"
 
 [[package]]
 name = "ripgrep"
-version = "14.0.1"
+version = "14.0.2"
 dependencies = [
  "anyhow",
  "bstr",
