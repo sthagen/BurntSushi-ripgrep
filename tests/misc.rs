@@ -1,5 +1,5 @@
 use crate::hay::SHERLOCK;
-use crate::util::{cmd_exists, sort_lines, Dir, TestCommand};
+use crate::util::{Dir, TestCommand, cmd_exists, sort_lines};
 
 // This file contains "miscellaneous" tests that were either written before
 // features were tracked more explicitly, or were simply written without
@@ -1092,16 +1092,22 @@ rgtest!(type_list, |_: Dir, mut cmd: TestCommand| {
 // This order is important when sorting them by system time-stamps.
 fn sort_setup(dir: Dir) {
     use std::{thread::sleep, time::Duration};
-
+    // As reported in https://github.com/BurntSushi/ripgrep/issues/3071
+    // this test fails if sufficient delay is not given on Windows/Aarch64.
+    let delay = if cfg!(all(windows, target_arch = "aarch64")) {
+        Duration::from_millis(1000)
+    } else {
+        Duration::from_millis(100)
+    };
     let sub_dir = dir.path().join("dir");
     dir.create("a", "test");
-    sleep(Duration::from_millis(100));
+    sleep(delay);
     dir.create_dir(&sub_dir);
-    sleep(Duration::from_millis(100));
+    sleep(delay);
     dir.create(sub_dir.join("c"), "test");
-    sleep(Duration::from_millis(100));
+    sleep(delay);
     dir.create("b", "test");
-    sleep(Duration::from_millis(100));
+    sleep(delay);
     dir.create(sub_dir.join("d"), "test");
 }
 

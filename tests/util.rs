@@ -68,14 +68,14 @@ impl Dir {
     /// does not need to be distinct for each invocation, but should correspond
     /// to a logical grouping of tests.
     pub fn new(name: &str) -> Dir {
-        let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
+        let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
         let root = env::current_exe()
             .unwrap()
             .parent()
             .expect("executable's directory")
             .to_path_buf();
         let dir =
-            env::temp_dir().join(TEST_DIR).join(name).join(&format!("{}", id));
+            env::temp_dir().join(TEST_DIR).join(name).join(&format!("{id}"));
         if dir.exists() {
             nice_err(&dir, fs::remove_dir_all(&dir));
         }

@@ -302,17 +302,19 @@ and **openSUSE Leap** since 15.1.
 $ sudo zypper install ripgrep
 ```
 
-If you're a **RHEL/CentOS 7/8** user, you can install ripgrep from
-[copr](https://copr.fedorainfracloud.org/coprs/carlwgeorge/ripgrep/):
+If you're a **RHEL/CentOS/Rocky Linux 9** user, you can install ripgrep from
+the [EPEL](https://docs.fedoraproject.org/en-US/epel/) repository:
 
 ```
-$ sudo yum install -y yum-utils
-$ sudo yum-config-manager --add-repo=https://copr.fedorainfracloud.org/coprs/carlwgeorge/ripgrep/repo/epel-7/carlwgeorge-ripgrep-epel-7.repo
-$ sudo yum install ripgrep
+$ sudo dnf config-manager --set-enabled crb
+$ sudo dnf install -y \
+    https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
+    https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
+$ sudo dnf install -y ripgrep
 ```
 
 If you're a **Nix** user, you can install ripgrep from
-[nixpkgs](https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/text/ripgrep/default.nix):
+[nixpkgs](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/ri/ripgrep/package.nix):
 
 ```
 $ nix-env --install ripgrep
@@ -336,7 +338,7 @@ then ripgrep can be installed using a binary `.deb` file provided in each
 [ripgrep release](https://github.com/BurntSushi/ripgrep/releases).
 
 ```
-$ curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep_14.1.1-1_amd64.deb
+$ curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep_14.1.1-1_amd64.deb
 $ sudo dpkg -i ripgrep_14.1.1-1_amd64.deb
 ```
 

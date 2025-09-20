@@ -517,7 +517,7 @@ impl HiArgs {
     /// When this returns false, it is impossible for ripgrep to ever report
     /// a match.
     pub(crate) fn matches_possible(&self) -> bool {
-        if self.patterns.patterns.is_empty() {
+        if self.patterns.patterns.is_empty() && !self.invert_match {
             return false;
         }
         if self.max_count == Some(0) {
@@ -562,7 +562,16 @@ impl HiArgs {
         wtr: W,
     ) -> Printer<W> {
         let summary_kind = if self.quiet {
-            SummaryKind::Quiet
+            match search_mode {
+                SearchMode::FilesWithMatches
+                | SearchMode::Count
+                | SearchMode::CountMatches
+                | SearchMode::JSON
+                | SearchMode::Standard => SummaryKind::QuietWithMatch,
+                SearchMode::FilesWithoutMatch => {
+                    SummaryKind::QuietWithoutMatch
+                }
+            }
         } else {
             match search_mode {
                 SearchMode::FilesWithMatches => SummaryKind::PathWithMatch,
@@ -570,10 +579,10 @@ impl HiArgs {
                 SearchMode::Count => SummaryKind::Count,
                 SearchMode::CountMatches => SummaryKind::CountMatches,
                 SearchMode::JSON => {
-                    return Printer::JSON(self.printer_json(wtr))
+                    return Printer::JSON(self.printer_json(wtr));
                 }
                 SearchMode::Standard => {
-                    return Printer::Standard(self.printer_standard(wtr))
+                    return Printer::Standard(self.printer_standard(wtr));
                 }
             }
         };
@@ -589,6 +598,7 @@ impl HiArgs {
             .pretty(false)
             .max_matches(self.max_count)
             .always_begin_end(false)
+            .replacement(self.replace.clone().map(|r| r.into()))
             .build(wtr)
     }
 
@@ -607,7 +617,6 @@ impl HiArgs {
             .hyperlink(self.hyperlink_config.clone())
             .max_columns_preview(self.max_columns_preview)
             .max_columns(self.max_columns)
-            .max_matches(self.max_count)
             .only_matching(self.only_matching)
             .path(self.with_filename)
             .path_terminator(self.path_terminator.clone())
@@ -709,6 +718,7 @@ impl HiArgs {
         };
         let mut builder = grep::searcher::SearcherBuilder::new();
         builder
+            .max_matches(self.max_count)
             .line_terminator(line_term)
             .invert_match(self.invert_match)
             .line_number(self.line_number)
@@ -788,7 +798,7 @@ impl HiArgs {
                 attach_timestamps(haystacks, |md| md.created()).collect()
             }
         };
-        with_timestamps.sort_by(|(_, ref t1), (_, ref t2)| {
+        with_timestamps.sort_by(|(_, t1), (_, t2)| {
             let ordering = match (*t1, *t2) {
                 // Both have metadata, do the obvious thing.
                 (Some(t1), Some(t2)) => t1.cmp(&t2),
@@ -799,11 +809,7 @@ impl HiArgs {
                 // When both error, we can't distinguish, so treat as equal.
                 (None, None) => Ordering::Equal,
             };
-            if sort.reverse {
-                ordering.reverse()
-            } else {
-                ordering
-            }
+            if sort.reverse { ordering.reverse() } else { ordering }
         });
         Box::new(with_timestamps.into_iter().map(|(s, _)| s))
     }
@@ -1178,7 +1184,7 @@ fn types(low: &LowArgs) -> anyhow::Result<ignore::types::Types> {
     let mut builder = ignore::types::TypesBuilder::new();
     builder.add_defaults();
     for tychange in low.type_changes.iter() {
-        match tychange {
+        match *tychange {
             TypeChange::Clear { ref name } => {
                 builder.clear(name);
             }

@@ -212,7 +212,7 @@ impl Ignore {
             igtmp.absolute_base = Some(absolute_base.clone());
             igtmp.has_git =
                 if self.0.opts.require_git && self.0.opts.git_ignore {
-                    parent.join(".git").exists()
+                    parent.join(".git").exists() || parent.join(".jj").exists()
                 } else {
                     false
                 };
@@ -251,7 +251,7 @@ impl Ignore {
         } else {
             None
         };
-        let has_git = git_type.map(|_| true).unwrap_or(false);
+        let has_git = git_type.is_some() || dir.join(".jj").exists();
 
         let mut errs = PartialErrorBuilder::default();
         let custom_ig_matcher = if self.0.custom_ignore_filenames.is_empty() {
@@ -290,6 +290,7 @@ impl Ignore {
             errs.maybe_push(err);
             m
         };
+
         let gi_exclude_matcher = if !self.0.opts.git_exclude {
             Gitignore::empty()
         } else {
@@ -461,21 +462,23 @@ impl Ignore {
                 // off of `path`. Overall, this seems a little ham-fisted, but
                 // it does fix a nasty bug. It should do fine until we overhaul
                 // this crate.
-                let dirpath = self.0.dir.as_path();
-                let path_prefix = match strip_prefix("./", dirpath) {
-                    None => dirpath,
-                    Some(stripped_dot_slash) => stripped_dot_slash,
-                };
-                let path = match strip_prefix(path_prefix, path) {
-                    None => abs_parent_path.join(path),
-                    Some(p) => {
-                        let p = match strip_prefix("/", p) {
-                            None => p,
-                            Some(p) => p,
-                        };
-                        abs_parent_path.join(p)
-                    }
-                };
+                let path = abs_parent_path.join(
+                    self.parents()
+                        .take_while(|ig| !ig.0.is_absolute_parent)
+                        .last()
+                        .map_or(path, |ig| {
+                            strip_if_is_prefix(
+                                "/",
+                                strip_if_is_prefix(
+                                    strip_if_is_prefix(
+                                        "./",
+                                        ig.0.dir.as_path(),
+                                    ),
+                                    path,
+                                ),
+                            )
+                        }),
+                );
 
                 for ig in
                     self.parents().skip_while(|ig| !ig.0.is_absolute_parent)
@@ -874,12 +877,21 @@ fn resolve_git_commondir(
     Ok(commondir_abs)
 }
 
+/// Strips `prefix` from `path` if it's a prefix, otherwise returns `path`
+/// unchanged.
+fn strip_if_is_prefix<'a, P: AsRef<Path> + ?Sized>(
+    prefix: &'a P,
+    path: &'a Path,
+) -> &'a Path {
+    strip_prefix(prefix, path).map_or(path, |p| p)
+}
+
 #[cfg(test)]
 mod tests {
     use std::{io::Write, path::Path};
 
     use crate::{
-        dir::IgnoreBuilder, gitignore::Gitignore, tests::TempDir, Error,
+        Error, dir::IgnoreBuilder, gitignore::Gitignore, tests::TempDir,
     };
 
     fn wfile<P: AsRef<Path>>(path: P, contents: &str) {
@@ -934,6 +946,19 @@ mod tests {
     fn gitignore() {
         let td = tmpdir();
         mkdirp(td.path().join(".git"));
+        wfile(td.path().join(".gitignore"), "foo\n!bar");
+
+        let (ig, err) = IgnoreBuilder::new().build().add_child(td.path());
+        assert!(err.is_none());
+        assert!(ig.matched("foo", false).is_ignore());
+        assert!(ig.matched("bar", false).is_whitelist());
+        assert!(ig.matched("baz", false).is_none());
+    }
+
+    #[test]
+    fn gitignore_with_jj() {
+        let td = tmpdir();
+        mkdirp(td.path().join(".jj"));
         wfile(td.path().join(".gitignore"), "foo\n!bar");
 
         let (ig, err) = IgnoreBuilder::new().build().add_child(td.path());
