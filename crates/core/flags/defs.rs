@@ -1264,17 +1264,26 @@ impl Flag for Count {
     }
     fn doc_long(&self) -> &'static str {
         r"
-This flag suppresses normal output and shows the number of lines that match the
-given patterns for each file searched. Each file containing a match has its
-path and count printed on each line. Note that unless \flag{multiline}
-is enabled, this reports the number of lines that match and not the total
-number of matches. In multiline mode, \flag{count} is equivalent to
-\flag{count-matches}.
+This flag suppresses normal output and shows the number of lines that match
+the given patterns for each file searched. Each file containing a match has
+its path and count printed on each line. Note that unless \flag{multiline} is
+enabled and the pattern(s) given can match over multiple lines, this reports
+the number of lines that match and not the total number of matches. When
+multiline mode is enabled and the pattern(s) given can match over multiple
+lines, \flag{count} is equivalent to \flag{count-matches}.
 .sp
 If only one file is given to ripgrep, then only the count is printed if there
 is a match. The \flag{with-filename} flag can be used to force printing the
 file path in this case. If you need a count to be printed regardless of whether
 there is a match, then use \flag{include-zero}.
+.sp
+Note that it is possible for this flag to have results inconsistent with
+the output of \flag{files-with-matches}. Notably, by default, ripgrep tries
+to avoid searching files with binary data. With this flag, ripgrep needs to
+search the entire content of files, which may include binary data. But with
+\flag{files-with-matches}, ripgrep can stop as soon as a match is observed,
+which may come well before any binary data. To avoid this inconsistency without
+disabling binary detection, use the \flag{binary} flag.
 .sp
 This overrides the \flag{count-matches} flag. Note that when \flag{count}
 is combined with \flag{only-matching}, then ripgrep behaves as if
@@ -2183,6 +2192,14 @@ impl Flag for FilesWithMatches {
     fn doc_long(&self) -> &'static str {
         r"
 Print only the paths with at least one match and suppress match contents.
+.sp
+Note that it is possible for this flag to have results inconsistent with the
+output of \flag{count}. Notably, by default, ripgrep tries to avoid searching
+files with binary data. With this flag, ripgrep might stop searching before
+the binary data is observed. But with \flag{count}, ripgrep has to search the
+entire contents to determine the match count, which means it might see binary
+data that causes it to skip searching that file. To avoid this inconsistency
+without disabling binary detection, use the \flag{binary} flag.
 .sp
 This overrides \flag{files-without-match}.
 "
@@ -3880,6 +3897,10 @@ Limit the number of matching lines per file searched to \fINUM\fP.
 When \flag{multiline} is used, a single match that spans multiple lines is only
 counted once for the purposes of this limit. Multiple matches in a single line
 are counted only once, as they would be in non-multiline mode.
+.sp
+When combined with \flag{after-context} or \flag{context}, it's possible for
+more matches than the maximum to be printed if contextual lines contain a
+match.
 .sp
 Note that \fB0\fP is a legal value but not likely to be useful. When used,
 ripgrep won't search anything.

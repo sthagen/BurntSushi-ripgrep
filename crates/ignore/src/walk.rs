@@ -898,6 +898,10 @@ impl WalkBuilder {
     ///
     /// Note that the errors for reading entries that may not satisfy the
     /// predicate will still be yielded.
+    ///
+    /// Note also that only one filter predicate can be applied to a
+    /// `WalkBuilder`. Calling this subsequent times overrides previous filter
+    /// predicates.
     pub fn filter_entry<P>(&mut self, filter: P) -> &mut WalkBuilder
     where
         P: Fn(&DirEntry) -> bool + Send + Sync + 'static,

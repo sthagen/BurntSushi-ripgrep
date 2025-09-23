@@ -414,6 +414,8 @@ impl io::Read for DecompressionReader {
 /// relative path. We permit this since it is assumed that the user has set
 /// this explicitly, and thus, desires this behavior.
 ///
+/// # Platform behavior
+///
 /// On non-Windows, this is a no-op.
 pub fn resolve_binary<P: AsRef<Path>>(
     prog: P,
