@@ -12,15 +12,19 @@ Bug fixes:
 * [BUG #829](https://github.com/BurntSushi/ripgrep/issues/829),
   [BUG #2731](https://github.com/BurntSushi/ripgrep/issues/2731),
   [BUG #2747](https://github.com/BurntSushi/ripgrep/issues/2747),
+  [BUG #2770](https://github.com/BurntSushi/ripgrep/issues/2770),
   [BUG #2778](https://github.com/BurntSushi/ripgrep/issues/2778),
   [BUG #2836](https://github.com/BurntSushi/ripgrep/issues/2836),
-  [BUG #2933](https://github.com/BurntSushi/ripgrep/pull/2933):
+  [BUG #2933](https://github.com/BurntSushi/ripgrep/pull/2933),
+  [BUG #3067](https://github.com/BurntSushi/ripgrep/pull/3067):
   Fix bug related to gitignores from parent directories.
 * [BUG #1332](https://github.com/BurntSushi/ripgrep/issues/1332),
   [BUG #3001](https://github.com/BurntSushi/ripgrep/issues/3001):
   Make `rg -vf file` where `file` is empty match everything.
 * [BUG #2177](https://github.com/BurntSushi/ripgrep/issues/2177):
   Ignore a UTF-8 BOM marker at the start of `.gitignore` (and similar files).
+* [BUG #2750](https://github.com/BurntSushi/ripgrep/issues/2750):
+  Fix memory usage regression for some truly large gitignore files.
 * [BUG #2944](https://github.com/BurntSushi/ripgrep/pull/2944):
   Fix a bug where the "bytes searched" in `--stats` output could be incorrect.
 * [BUG #2990](https://github.com/BurntSushi/ripgrep/issues/2990):
@@ -33,6 +37,8 @@ Bug fixes:
   Fix a bug where `-q --files-without-match` inverted the exit code.
 * [BUG #3131](https://github.com/BurntSushi/ripgrep/issues/3131):
   Document inconsistency between `-c/--count` and `--files-with-matches`.
+* [BUG #3135](https://github.com/BurntSushi/ripgrep/issues/3135):
+  Fix rare panic for some classes of large regexes on large haystacks.
 * [BUG #3140](https://github.com/BurntSushi/ripgrep/issues/3140):
   Ensure hyphens in flag names are escaped in the roff text for the man page.
 * [BUG #3155](https://github.com/BurntSushi/ripgrep/issues/3155):
@@ -63,6 +69,8 @@ Feature enhancements:
   Improve completions for `--hyperlink-format` in bash and fish.
 * [FEATURE #3102](https://github.com/BurntSushi/ripgrep/pull/3102):
   Improve completions for `--hyperlink-format` in zsh.
+* [FEATURE #3165](https://github.com/BurntSushi/ripgrep/pull/3165):
+  Add release binaries for `riscv64gc-unknown-linux-gnu`.
 
 
 14.1.1 (2024-09-08)
