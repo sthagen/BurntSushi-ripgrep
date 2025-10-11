@@ -21,6 +21,8 @@ Bug fixes:
   Make `rg -vf file` where `file` is empty match everything.
 * [BUG #2177](https://github.com/BurntSushi/ripgrep/issues/2177):
   Ignore a UTF-8 BOM marker at the start of `.gitignore` (and similar files).
+* [BUG #2750](https://github.com/BurntSushi/ripgrep/issues/2750):
+  Fix memory usage regression for some truly large gitignore files.
 * [BUG #2944](https://github.com/BurntSushi/ripgrep/pull/2944):
   Fix a bug where the "bytes searched" in `--stats` output could be incorrect.
 * [BUG #2990](https://github.com/BurntSushi/ripgrep/issues/2990):
@@ -33,6 +35,8 @@ Bug fixes:
   Fix a bug where `-q --files-without-match` inverted the exit code.
 * [BUG #3131](https://github.com/BurntSushi/ripgrep/issues/3131):
   Document inconsistency between `-c/--count` and `--files-with-matches`.
+* [BUG #3135](https://github.com/BurntSushi/ripgrep/issues/3135):
+  Fix rare panic for some classes of large regexes on large haystacks.
 * [BUG #3140](https://github.com/BurntSushi/ripgrep/issues/3140):
   Ensure hyphens in flag names are escaped in the roff text for the man page.
 * [BUG #3155](https://github.com/BurntSushi/ripgrep/issues/3155):
