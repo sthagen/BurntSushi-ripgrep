@@ -1304,6 +1304,30 @@ rgtest!(r1891, |dir: Dir, mut cmd: TestCommand| {
     eqnice!("1:\n2:\n2:\n2:\n", cmd.args(&["-won", "", "test"]).stdout());
 });
 
+// See: https://github.com/BurntSushi/ripgrep/issues/2094
+rgtest!(r2094, |dir: Dir, mut cmd: TestCommand| {
+    dir.create("haystack", "a\nb\nc\na\nb\nc");
+    cmd.args(&[
+        "--no-line-number",
+        "--no-filename",
+        "--multiline",
+        "--max-count=1",
+        "--passthru",
+        "--replace=B",
+        "b",
+        "haystack",
+    ]);
+    let expected = "\
+a
+B
+c
+a
+b
+c
+";
+    eqnice!(expected, cmd.stdout());
+});
+
 // See: https://github.com/BurntSushi/ripgrep/issues/2095
 rgtest!(r2095, |dir: Dir, mut cmd: TestCommand| {
     dir.create(

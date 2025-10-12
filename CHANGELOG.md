@@ -29,7 +29,8 @@ Bug fixes:
   Fix a bug where the "bytes searched" in `--stats` output could be incorrect.
 * [BUG #2990](https://github.com/BurntSushi/ripgrep/issues/2990):
   Fix a bug where ripgrep would mishandle globs that ended with a `.`.
-* [BUG #3076](https://github.com/BurntSushi/ripgrep/issues/3076):
+* [BUG #2094](https://github.com/BurntSushi/ripgrep/issues/2094),
+  [BUG #3076](https://github.com/BurntSushi/ripgrep/issues/3076):
   Fix bug with `-m/--max-count` and `-U/--multiline` showing too many matches.
 * [BUG #3100](https://github.com/BurntSushi/ripgrep/pull/3100):
   Preserve line terminators when using `-r/--replace` flag.
