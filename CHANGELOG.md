@@ -1,3 +1,8 @@
+TBD
+===
+Unreleased changes. Release notes have not yet been written.
+
+
 15.0.0 (2025-10-15)
 ===================
 ripgrep 15 is a new major version release of ripgrep that mostly has bug fixes,
