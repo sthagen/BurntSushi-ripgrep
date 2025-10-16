@@ -2,6 +2,35 @@ TBD
 ===
 Unreleased changes. Release notes have not yet been written.
 
+
+15.0.0 (2025-10-15)
+===================
+ripgrep 15 is a new major version release of ripgrep that mostly has bug fixes,
+some minor performance improvements and minor new features. Here are some
+highlights:
+
+* Several bugs around gitignore matching have been fixed. This includes
+  a commonly reported bug related to applying gitignore rules from parent
+  directories.
+* A memory usage regression when handling very large gitignore files has been
+  fixed.
+* `rg -vf file`, where `file` is empty, now matches everything.
+* The `-r/--replace` flag now works with `--json`.
+* A subset of Jujutsu (`jj`) repositories are now treated as if they were git
+  repositories. That is, ripgrep will respect `jj`'s gitignores.
+* Globs can now use nested curly braces.
+
+Platform support:
+
+* `aarch64` for Windows now has release artifacts.
+* `powerpc64` no longer has release artifacts generated for it. The CI
+  release workflow stopped working, and I didn't deem it worth my time to
+  debug it. If someone wants this and can test it, I'd be happy to add it
+  back.
+* ripgrep binaries are now compiled with full LTO enabled. You may notice
+  small performance improvements from this and a modest decrease in binary
+  size.
+
 Performance improvements:
 
 * [PERF #2111](https://github.com/BurntSushi/ripgrep/issues/2111):
@@ -50,6 +79,10 @@ Bug fixes:
   Statically compile PCRE2 into macOS release artifacts on `aarch64`.
 * [BUG #3173](https://github.com/BurntSushi/ripgrep/issues/3173):
   Fix ancestor ignore filter bug when searching whitelisted hidden files.
+* [BUG #3178](https://github.com/BurntSushi/ripgrep/discussions/3178):
+  Fix bug causing incorrect summary statistics with `--json` flag.
+* [BUG #3179](https://github.com/BurntSushi/ripgrep/issues/3179):
+  Fix gitignore bug when searching absolute paths with global gitignores.
 * [BUG #3180](https://github.com/BurntSushi/ripgrep/issues/3180):
   Fix a panicking bug when using `-U/--multiline` and `-r/--replace`.
 
@@ -76,8 +109,6 @@ Feature enhancements:
   Improve completions for `--hyperlink-format` in bash and fish.
 * [FEATURE #3102](https://github.com/BurntSushi/ripgrep/pull/3102):
   Improve completions for `--hyperlink-format` in zsh.
-* [FEATURE #3165](https://github.com/BurntSushi/ripgrep/pull/3165):
-  Add release binaries for `riscv64gc-unknown-linux-gnu`.
 
 
 14.1.1 (2024-09-08)
