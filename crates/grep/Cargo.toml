@@ -15,7 +15,7 @@ edition = "2024"
 
 [dependencies]
 grep-cli = { version = "0.1.12", path = "../cli" }
-grep-matcher = { version = "0.1.7", path = "../matcher" }
+grep-matcher = { version = "0.1.8", path = "../matcher" }
 grep-pcre2 = { version = "0.1.8", path = "../pcre2", optional = true }
 grep-printer = { version = "0.2.2", path = "../printer" }
 grep-regex = { version = "0.1.13", path = "../regex" }
