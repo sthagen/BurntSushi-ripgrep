@@ -1,11 +1,19 @@
-15.0.1
+15.1.0
 ======
-Unreleased changes. Release notes have not yet been written.
+This is a small release that fixes a bug with how ripgrep handles line
+buffering. This might manifest as ripgrep printing output later than you
+expect or not working correctly with `tail -f` (even if you're using the
+`--line-buffered` flag).
 
 Bug fixes:
 
 * [BUG #3194](https://github.com/BurntSushi/ripgrep/issues/3194):
   Fix a regression with `--line-buffered` introduced in ripgrep 15.0.0.
+
+Feature enhancements:
+
+* [FEATURE #3192](https://github.com/BurntSushi/ripgrep/pull/3192):
+  Add hyperlink alias for Cursor.
 
 
 15.0.0 (2025-10-15)
