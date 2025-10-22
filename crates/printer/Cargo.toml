@@ -35,7 +35,7 @@ grep-regex = { version = "0.1.14", path = "../regex" }
 all-features = true
 # This opts into a nightly unstable option to show the features that need to be
 # enabled for public API items. To do that, we set 'docsrs', and when that's
-# enabled, we enable the 'doc_auto_cfg' feature.
+# enabled, we enable the 'doc_cfg' feature.
 #
 # To test this locally, run:
 #
