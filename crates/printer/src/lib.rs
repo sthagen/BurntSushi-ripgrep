@@ -58,7 +58,7 @@ assert_eq!(output, expected);
 */
 
 #![deny(missing_docs)]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use crate::{
     color::{ColorError, ColorSpecs, UserColorSpec, default_color_specs},
