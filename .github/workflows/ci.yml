@@ -53,7 +53,7 @@ jobs:
         include:
         - build: pinned
           os: ubuntu-latest
-          rust: 1.85.0
+          rust: 1.96.0
         - build: stable
           os: ubuntu-latest
           rust: stable
@@ -170,6 +170,9 @@ jobs:
           echo "====="
         fi
         set -x
+
+    - name: Run tests with indexing enabled
+      run: ${{ env.CARGO }} test --verbose --workspace --features unstable-index ${{ env.TARGET_FLAGS }}
 
     - name: Run tests with PCRE2 (sans cross)
       if: matrix.target == ''
